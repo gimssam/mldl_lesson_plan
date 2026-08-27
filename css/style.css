@@ -48,7 +48,7 @@
   html{scroll-behavior:smooth;}
   body{
     margin:0;
-    background:var(--color-canvas);
+    background:var(--color-surface-strong);
     color:var(--color-body);
     font-family:var(--font-body);
     font-size:16px;
