@@ -5,7 +5,6 @@
   var NAV_DOC_TITLE = document.getElementById("navDocTitle");
   var LESSON_TABS = document.getElementById("lessonTabs");
   var SCROLL_BTN = document.getElementById("scrollTopBtn");
-  var PRINT_BTN = document.getElementById("printBtn");
 
   var DEFAULT_MANIFEST = "lessons.json";
 
@@ -116,7 +115,7 @@
       h.id = id;
       var isH2 = h.tagName === "H2";
       if(isH2){
-        var m = h.textContent.match(/^(\d+)\.\s*(.+)$/);
+        var m = h.textContent.match(/^(\d+)\.\s+(.+)$/);
         if(m){
           h.innerHTML = '<span class="h2-badge">' + m[1] + '</span><span>' + escapeHtml(m[2]) + '</span>';
         }
@@ -242,18 +241,11 @@
     document.title = hero.title + " · 웹 교안";
     NAV_DOC_TITLE.textContent = hero.title;
 
-    var heroArt = meta.heroImage ?
-      '<div class="hero__art"><img src="' + meta.heroImage + '" alt=""></div>' :
-      '<div class="hero__art"></div>';
-
     APP.innerHTML =
       '<header class="hero">' +
-        '<div>' +
-          '<span class="hero__eyebrow">웹 교안 · 마크다운 원본 연동</span>' +
-          '<h1>' + escapeHtml(hero.title) + '</h1>' +
-          (hero.subtitle ? '<p class="hero__subtitle">' + escapeHtml(hero.subtitle) + '</p>' : '') +
-        '</div>' +
-        heroArt +
+        '<span class="hero__eyebrow">웹 교안 · 마크다운 원본 연동</span>' +
+        '<h1>' + escapeHtml(hero.title) + '</h1>' +
+        (hero.subtitle ? '<p class="hero__subtitle">' + escapeHtml(hero.subtitle) + '</p>' : '') +
       '</header>' +
       '<div class="layout">' +
         '<aside class="toc" id="tocPanel"></aside>' +
@@ -282,7 +274,6 @@
       buildTabs(lessons, target);
 
       var meta = lessons.find(function(l){ return l.file === target; }) || {file: target, label: target};
-      meta.heroImage = "images/banner_header.png";
       meta.footer = "(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정";
 
       fetchText(target)
@@ -305,7 +296,6 @@
   SCROLL_BTN.addEventListener("click", function(){
     window.scrollTo({top:0, behavior:"smooth"});
   });
-  PRINT_BTN.addEventListener("click", function(){ window.print(); });
 
   boot();
 })();

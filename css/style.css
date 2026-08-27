@@ -98,7 +98,16 @@
     text-overflow:ellipsis;
     white-space:nowrap;
   }
-  .top-nav__actions{display:flex;align-items:center;gap:var(--space-sm);}
+  .top-nav__actions{display:flex;align-items:center;gap:var(--space-md);}
+  .top-nav__org{
+    font-size:13px;
+    font-weight:500;
+    color:var(--color-muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:52vw;
+  }
 
   .btn{
     font-family:var(--font-body);
@@ -144,11 +153,7 @@
   /* ---------- hero ---------- */
   .hero{
     padding:var(--space-xxl) var(--space-lg);
-    display:grid;
-    grid-template-columns:7fr 5fr;
-    gap:var(--space-xl);
-    align-items:center;
-    max-width:1280px;
+    max-width:900px;
     margin:0 auto;
   }
   .hero__eyebrow{
@@ -193,17 +198,6 @@
   .badge-pill.badge-pink{background:var(--color-pink);color:#fff;}
   .badge-pill.badge-teal{background:var(--color-teal);color:#fff;}
   .badge-pill.badge-ochre{background:var(--color-ochre);color:var(--color-ink);}
-
-  .hero__art{
-    background:var(--color-surface-soft);
-    border-radius:var(--radius-xl);
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:160px;
-  }
-  .hero__art img{width:100%;height:100%;object-fit:cover;}
 
   /* ---------- layout ---------- */
   .layout{
@@ -481,8 +475,6 @@
 
   /* responsive */
   @media (max-width:960px){
-    .hero{grid-template-columns:1fr;}
-    .hero__art{order:-1;min-height:180px;}
     .layout{grid-template-columns:1fr;}
     .toc{
       position:fixed;
@@ -497,6 +489,10 @@
     .toc.is-open{transform:translateY(0);}
     .toc-toggle{display:inline-flex;}
     .doc{max-width:100%;}
+  }
+
+  @media (max-width:600px){
+    .top-nav__org{display:none;}
   }
 
   @media print{
