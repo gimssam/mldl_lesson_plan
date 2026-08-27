@@ -111,16 +111,17 @@
     var headings = container.querySelectorAll("h2, h3");
     var tocEntries = [];
     headings.forEach(function(h, idx){
-      var id = slugify(h.textContent, idx);
+      var originalText = h.textContent;
+      var id = slugify(originalText, idx);
       h.id = id;
       var isH2 = h.tagName === "H2";
       if(isH2){
-        var m = h.textContent.match(/^(\d+)\.\s+(.+)$/);
+        var m = originalText.match(/^(\d+)\.\s+(.+)$/);
         if(m){
           h.innerHTML = '<span class="h2-badge">' + m[1] + '</span><span>' + escapeHtml(m[2]) + '</span>';
         }
       }
-      tocEntries.push({id:id, text:h.textContent, level: isH2 ? 2 : 3});
+      tocEntries.push({id:id, text:originalText, level: isH2 ? 2 : 3});
     });
 
     // blockquotes -> callouts
@@ -186,20 +187,26 @@
     return tocEntries;
   }
 
-  function buildToc(entries){
+  // strip a heading's own leading numbering ("1. ", "①") before showing it
+  // as a pill label, since the pill bar applies its own sequential 00, 01...
+  var LEADING_NUMBER_RE = /^(\d+\.\s+|[①②③④⑤⑥⑦⑧⑨⑩]\s*)/;
+
+  function buildTocBar(entries, labelText){
     if(!entries.length) return "";
-    var html = '<div class="toc__label">목차</div><ul class="toc__list">';
-    entries.forEach(function(e){
-      var cls = "toc__link" + (e.level === 3 ? " " : "");
-      var wrapClass = e.level === 3 ? "toc__sub" : "";
-      html += '<li class="' + wrapClass + '"><a class="toc__link" data-target="' + e.id + '" href="#' + e.id + '">' + escapeHtml(e.text) + '</a></li>';
-    });
-    html += "</ul>";
-    return html;
+    var pills = entries.map(function(e, idx){
+      var clean = e.text.replace(LEADING_NUMBER_RE, "");
+      var num = idx < 10 ? "0" + idx : String(idx);
+      var cls = "toc-pill" + (e.level === 3 ? " toc-pill--sub" : "");
+      return '<a class="' + cls + '" data-target="' + e.id + '" href="#' + e.id + '">' +
+        escapeHtml(num + ". " + clean) + '</a>';
+    }).join("");
+
+    return '<div class="toc-bar__label">' + escapeHtml(labelText) + ' — 세부 목차</div>' +
+      '<div class="toc-bar__pills">' + pills + '</div>';
   }
 
-  function wireToc(tocEl){
-    var links = tocEl.querySelectorAll(".toc__link");
+  function wireTocBar(barEl){
+    var links = barEl.querySelectorAll(".toc-pill");
     var map = {};
     links.forEach(function(l){ map[l.getAttribute("data-target")] = l; });
 
@@ -218,16 +225,6 @@
     }, {rootMargin: "-100px 0px -70% 0px"});
 
     headings.forEach(function(h){ observer.observe(h); });
-
-    var toggle = document.getElementById("tocToggle");
-    if(toggle){
-      toggle.addEventListener("click", function(){
-        tocEl.classList.toggle("is-open");
-      });
-      links.forEach(function(l){
-        l.addEventListener("click", function(){ tocEl.classList.remove("is-open"); });
-      });
-    }
   }
 
   function render(mdText, meta){
@@ -248,7 +245,7 @@
         (hero.subtitle ? '<p class="hero__subtitle">' + escapeHtml(hero.subtitle) + '</p>' : '') +
       '</header>' +
       '<div class="layout">' +
-        '<aside class="toc" id="tocPanel"></aside>' +
+        '<nav class="toc-bar" id="tocBar"></nav>' +
         '<main class="content-card"><article class="doc" id="docBody"></article></main>' +
       '</div>' +
       '<footer class="site-footer">' +
@@ -259,8 +256,9 @@
     var docBody = document.getElementById("docBody");
     docBody.innerHTML = cleanHtml;
     var tocEntries = enhance(docBody);
-    document.getElementById("tocPanel").innerHTML = buildToc(tocEntries);
-    wireToc(document.getElementById("tocPanel"));
+    var tocBar = document.getElementById("tocBar");
+    tocBar.innerHTML = buildTocBar(tocEntries, meta.label || hero.title);
+    wireTocBar(tocBar);
   }
 
   function boot(){
