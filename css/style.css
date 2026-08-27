@@ -172,7 +172,7 @@
 
   /* ---------- top toc bar ---------- */
   .toc-bar{
-    width:80%;
+    width:75%;
     max-width:1800px;
     margin:0 auto var(--space-xxl);
     background:var(--color-canvas);
@@ -232,7 +232,7 @@
     background:var(--color-canvas);
     min-width:0;
   }
-  .doc{width:80%;max-width:1800px;margin:0 auto;}
+  .doc{width:75%;max-width:1800px;margin:0 auto;}
 
   .doc h2{
     font-family:var(--font-display);
