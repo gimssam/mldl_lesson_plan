@@ -239,11 +239,6 @@
     NAV_DOC_TITLE.textContent = hero.title;
 
     APP.innerHTML =
-      '<header class="hero">' +
-        '<span class="hero__eyebrow">웹 교안 · 마크다운 원본 연동</span>' +
-        '<h1>' + escapeHtml(hero.title) + '</h1>' +
-        (hero.subtitle ? '<p class="hero__subtitle">' + escapeHtml(hero.subtitle) + '</p>' : '') +
-      '</header>' +
       '<div class="layout">' +
         '<nav class="toc-bar" id="tocBar"></nav>' +
         '<main class="content-card"><article class="doc" id="docBody"></article></main>' +
