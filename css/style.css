@@ -165,14 +165,15 @@
 
   /* ---------- layout ---------- */
   .layout{
-    max-width:1520px;
+    max-width:none;
     margin:0 auto;
     padding:var(--space-xxl) var(--space-lg) var(--space-section);
   }
 
   /* ---------- top toc bar ---------- */
   .toc-bar{
-    max-width:1440px;
+    width:80%;
+    max-width:1800px;
     margin:0 auto var(--space-xxl);
     background:var(--color-canvas);
     border:1px solid var(--color-hairline);
@@ -231,7 +232,7 @@
     background:var(--color-canvas);
     min-width:0;
   }
-  .doc{max-width:1440px;margin:0 auto;}
+  .doc{width:80%;max-width:1800px;margin:0 auto;}
 
   .doc h2{
     font-family:var(--font-display);
@@ -460,8 +461,8 @@
 
   /* responsive */
   @media (max-width:960px){
-    .doc{max-width:100%;}
-    .toc-bar{padding:var(--space-md);}
+    .doc{width:100%;max-width:100%;}
+    .toc-bar{width:100%;max-width:100%;padding:var(--space-md);}
     .toc-pill{padding:8px 14px;font-size:13px;}
   }
 
