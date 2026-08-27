@@ -191,11 +191,25 @@
   // as a pill label, since the pill bar applies its own sequential 00, 01...
   var LEADING_NUMBER_RE = /^(\d+\.\s+|[①②③④⑤⑥⑦⑧⑨⑩]\s*)/;
 
+  // top-level (h2) entries get a sequential 00, 01, 02... number; a h3
+  // entry is a sub-item of whichever h2 precedes it, so it's numbered
+  // relative to that parent instead ("03-1", "03-2", ...).
   function buildTocBar(entries, labelText){
     if(!entries.length) return "";
-    var pills = entries.map(function(e, idx){
+    var h2Index = -1;
+    var subIndex = 0;
+    var pills = entries.map(function(e){
       var clean = e.text.replace(LEADING_NUMBER_RE, "");
-      var num = idx < 10 ? "0" + idx : String(idx);
+      var num;
+      if(e.level === 3){
+        subIndex += 1;
+        var parent = h2Index < 0 ? 0 : h2Index;
+        num = (parent < 10 ? "0" + parent : String(parent)) + "-" + subIndex;
+      } else {
+        h2Index += 1;
+        subIndex = 0;
+        num = h2Index < 10 ? "0" + h2Index : String(h2Index);
+      }
       var cls = "toc-pill" + (e.level === 3 ? " toc-pill--sub" : "");
       return '<a class="' + cls + '" data-target="' + e.id + '" href="#' + e.id + '">' +
         escapeHtml(num + ". " + clean) + '</a>';
