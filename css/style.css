@@ -130,26 +130,6 @@
   .btn-secondary:hover{border-color:var(--color-ink);}
   .btn-icon{padding:10px;border-radius:var(--radius-pill);}
 
-  /* ---------- lesson switcher ---------- */
-  .lesson-tabs{
-    display:flex;
-    gap:var(--space-xs);
-    padding:var(--space-sm) var(--space-lg) 0;
-    flex-wrap:wrap;
-  }
-  .lesson-tab{
-    background:transparent;
-    color:var(--color-muted);
-    font-family:var(--font-body);
-    font-size:14px;
-    font-weight:500;
-    border:none;
-    border-radius:var(--radius-pill);
-    padding:8px 16px;
-    cursor:pointer;
-  }
-  .lesson-tab.is-active{background:var(--color-surface-card);color:var(--color-ink);}
-
   .hero__meta{display:flex;flex-wrap:wrap;gap:var(--space-xs);}
   .badge-pill{
     display:inline-flex;
@@ -668,6 +648,6 @@
   }
 
   @media print{
-    .top-nav,.toc-bar,.scroll-top,.lesson-tabs,.lesson-pager{display:none !important;}
+    .top-nav,.toc-bar,.scroll-top,.lesson-pager{display:none !important;}
     body{background:#fff;}
   }

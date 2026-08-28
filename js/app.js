@@ -3,7 +3,6 @@
 
   var APP = document.getElementById("app");
   var NAV_DOC_TITLE = document.getElementById("navDocTitle");
-  var LESSON_TABS = document.getElementById("lessonTabs");
   var SCROLL_BTN = document.getElementById("scrollTopBtn");
 
   var DEFAULT_MANIFEST = "lessons.json";
@@ -39,29 +38,6 @@
         catch(e){ return {lessons:[]}; }
       })
       .catch(function(){ return {lessons:[]}; });
-  }
-
-  function buildTabs(lessons, activeFile){
-    if(!lessons || lessons.length < 2){
-      LESSON_TABS.style.display = "none";
-      LESSON_TABS.innerHTML = "";
-      return;
-    }
-    LESSON_TABS.style.display = "flex";
-    LESSON_TABS.innerHTML = lessons.map(function(l){
-      var cls = "lesson-tab" + (l.file === activeFile ? " is-active" : "");
-      return '<button class="' + cls + '" data-file="' + escapeHtml(l.file) + '" type="button">' +
-        escapeHtml(l.label || l.file) + '</button>';
-    }).join("");
-
-    Array.prototype.forEach.call(LESSON_TABS.querySelectorAll(".lesson-tab"), function(btn){
-      btn.addEventListener("click", function(){
-        var f = btn.getAttribute("data-file");
-        var url = new URL(window.location.href);
-        url.searchParams.set("doc", f);
-        window.location.href = url.toString();
-      });
-    });
   }
 
   // split off the first two bold-only lines as hero title/subtitle if the
@@ -329,8 +305,6 @@
       var target = requested ||
         (lessons[0] && lessons[0].file) ||
         "ch532_신경망심층학습.md";
-
-      buildTabs(lessons, target);
 
       var meta = lessons.find(function(l){ return l.file === target; }) || {file: target, label: target};
       meta.footer = "(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정";
