@@ -200,12 +200,12 @@
   .toc-pill{
     display:inline-flex;
     align-items:center;
-    padding:10px 16px;
+    padding:8px 14px;
     border-radius:var(--radius-pill);
     border:1px solid var(--color-hairline);
     background:var(--color-canvas);
     color:var(--color-body);
-    font-size:14px;
+    font-size:12px;
     font-weight:500;
     line-height:1.3;
     text-decoration:none;
@@ -219,10 +219,11 @@
     font-weight:600;
   }
   .toc-pill--sub{
+    padding:7px 12px;
     background:var(--color-surface-card);
     border-color:var(--color-surface-card);
     color:var(--color-muted);
-    font-size:13px;
+    font-size:11px;
   }
   .toc-pill--sub:hover{border-color:var(--color-ink);color:var(--color-ink);}
   .toc-pill--sub.is-active{
@@ -467,7 +468,7 @@
   @media (max-width:960px){
     .layout{width:100%;max-width:100%;}
     .toc-bar{padding:var(--space-md);}
-    .toc-pill{padding:8px 14px;font-size:13px;}
+    .toc-pill{padding:7px 12px;font-size:11px;}
   }
 
   @media (max-width:600px){
