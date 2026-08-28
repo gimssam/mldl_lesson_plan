@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>머신러닝 딥러닝</title>
+<meta name="description" content="마크다운 원본을 불러와 표시하는 웹 교안">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="top-nav">
+  <a class="top-nav__brand" href="index.html">
+    <span class="top-nav__dot"></span>
+    <span id="brandLabel">머신러닝 딥러닝</span>
+    <span class="top-nav__doc-title" id="navDocTitle"></span>
+  </a>
+  <div class="top-nav__actions">
+    <span class="top-nav__org">(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정</span>
+  </div>
+</nav>
+
+<div class="lesson-tabs" id="lessonTabs" style="display:none;"></div>
+
+<div id="app">
+  <div class="state-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <h2>교안을 불러오는 중입니다</h2>
+    <p>마크다운 원본 파일을 읽어오고 있습니다.</p>
+  </div>
+</div>
+
+<button class="scroll-top" id="scrollTopBtn" type="button" aria-label="맨 위로">↑</button>
+
+<script src="js/vendor-marked.min.js"></script>
+<script src="js/vendor-dompurify.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

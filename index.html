@@ -3,37 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>머신러닝 딥러닝</title>
-<meta name="description" content="마크다운 원본을 불러와 표시하는 웹 교안">
+<title>머신러닝 딥러닝 · 웹 교안</title>
+<meta name="description" content="머신러닝 · 딥러닝 강의 전체 절 목차">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <nav class="top-nav">
-  <div class="top-nav__brand">
+  <a class="top-nav__brand" href="index.html">
     <span class="top-nav__dot"></span>
     <span id="brandLabel">머신러닝 딥러닝</span>
-    <span class="top-nav__doc-title" id="navDocTitle"></span>
-  </div>
+  </a>
   <div class="top-nav__actions">
     <span class="top-nav__org">(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정</span>
   </div>
 </nav>
 
-<div class="lesson-tabs" id="lessonTabs" style="display:none;"></div>
+<div class="layout">
+  <header class="home-hero">
+    <span class="badge-pill badge-pink">웹 교안 · 마크다운 원본 연동</span>
+    <h1 class="home-hero__title">머신러닝 · 딥러닝 강의</h1>
+    <p class="home-hero__desc">아래 목록에서 절을 선택하면 해당 교안 페이지로 이동합니다. 마크다운 원본을 수정하면 새로고침만으로 내용이 그대로 반영됩니다.</p>
+    <div class="home-hero__count" id="lessonCount"></div>
+  </header>
 
-<div id="app">
-  <div class="state-screen" id="loadingScreen">
-    <div class="spinner"></div>
-    <h2>교안을 불러오는 중입니다</h2>
-    <p>마크다운 원본 파일을 읽어오고 있습니다.</p>
-  </div>
+  <main class="home-grid" id="lessonGrid">
+    <div class="state-screen" id="loadingScreen">
+      <div class="spinner"></div>
+      <h2>목차를 불러오는 중입니다</h2>
+      <p>lessons.json을 읽어오고 있습니다.</p>
+    </div>
+  </main>
 </div>
 
-<button class="scroll-top" id="scrollTopBtn" type="button" aria-label="맨 위로">↑</button>
+<footer class="site-footer">
+  <div>(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정</div>
+  <div class="note">이 페이지는 <code>lessons.json</code>을 매번 새로 불러와 전체 절 목차를 표시합니다. 새 절을 추가하면 새로고침만으로 반영됩니다.</div>
+</footer>
 
-<script src="js/vendor-marked.min.js"></script>
-<script src="js/vendor-dompurify.min.js"></script>
-<script src="js/app.js"></script>
+<script src="js/home.js"></script>
 </body>
 </html>
