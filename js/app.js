@@ -219,6 +219,34 @@
       '<div class="toc-bar__pills">' + pills + '</div>';
   }
 
+  // prev/next section pager, driven by lessons.json order. shows a disabled
+  // placeholder on whichever side has no neighbor (first/last section).
+  function buildPager(lessons, currentFile){
+    if(!lessons || !lessons.length) return "";
+    var idx = lessons.findIndex(function(l){ return l.file === currentFile; });
+    if(idx === -1) return "";
+    var prev = idx > 0 ? lessons[idx - 1] : null;
+    var next = idx < lessons.length - 1 ? lessons[idx + 1] : null;
+
+    function link(item, dirLabel, sideClass, emptyLabel){
+      if(!item){
+        return '<span class="lesson-pager__link ' + sideClass + ' lesson-pager__link--disabled">' +
+          '<span class="lesson-pager__dir">' + escapeHtml(dirLabel) + '</span>' +
+          '<span class="lesson-pager__label">' + escapeHtml(emptyLabel) + '</span>' +
+        '</span>';
+      }
+      var url = new URL(window.location.href);
+      url.searchParams.set("doc", item.file);
+      return '<a class="lesson-pager__link ' + sideClass + '" href="' + escapeHtml(url.toString()) + '">' +
+        '<span class="lesson-pager__dir">' + escapeHtml(dirLabel) + '</span>' +
+        '<span class="lesson-pager__label">' + escapeHtml(item.label || item.file) + '</span>' +
+      '</a>';
+    }
+
+    return link(prev, "← 이전 절", "lesson-pager__prev", "첫 번째 절입니다") +
+      link(next, "다음 절 →", "lesson-pager__next", "마지막 절입니다");
+  }
+
   function wireTocBar(barEl){
     var links = barEl.querySelectorAll(".toc-pill");
     var map = {};
@@ -256,6 +284,7 @@
       '<div class="layout">' +
         '<nav class="toc-bar" id="tocBar"></nav>' +
         '<main class="content-card"><article class="doc" id="docBody"></article></main>' +
+        '<nav class="lesson-pager" id="lessonPager"></nav>' +
       '</div>' +
       '<footer class="site-footer">' +
         '<div>' + escapeHtml(meta.footer || "") + '</div>' +
@@ -268,6 +297,9 @@
     var tocBar = document.getElementById("tocBar");
     tocBar.innerHTML = buildTocBar(tocEntries, meta.label || hero.title);
     wireTocBar(tocBar);
+
+    var pagerEl = document.getElementById("lessonPager");
+    pagerEl.innerHTML = buildPager(meta.lessons, meta.file);
   }
 
   function boot(){
@@ -282,6 +314,7 @@
 
       var meta = lessons.find(function(l){ return l.file === target; }) || {file: target, label: target};
       meta.footer = "(주)KD 아카데미 | 훈련교사 김명철 · AI 특화 인재양성 과정";
+      meta.lessons = lessons.length ? lessons : [{file: target, label: meta.label || target}];
 
       fetchText(target)
         .then(function(mdText){ render(mdText, meta); })
