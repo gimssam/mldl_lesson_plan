@@ -72,16 +72,20 @@
       listHtml = '<ul class="course-block__list">' + items.map(function(it){
         var cls = "course-block__item" + (it.level === 3 ? " course-block__item--sub" : "");
         return '<li class="' + cls + '"><a href="' + href + '#' + it.id + '">' +
-          escapeHtml(it.num + '. ' + it.text) + '</a></li>';
+          '<span class="course-block__num">' + escapeHtml(it.num) + '</span>' +
+          '<span>' + escapeHtml(it.text) + '</span>' +
+        '</a></li>';
       }).join("") + '</ul>';
     } else {
       listHtml = '<p class="course-block__empty">목차 정보를 불러오지 못했습니다.</p>';
     }
 
     return '<section class="course-block">' +
-      '<div class="course-block__eyebrow">제' + (index + 1) + '절</div>' +
-      '<h2 class="course-block__title"><a href="' + href + '">' + escapeHtml(lesson.label || lesson.file) + '</a></h2>' +
-      '<div class="course-block__file">' + escapeHtml(lesson.file) + '</div>' +
+      '<div class="course-block__head">' +
+        '<div class="course-block__eyebrow">제' + (index + 1) + '절</div>' +
+        '<h2 class="course-block__title"><a href="' + href + '">' + escapeHtml(lesson.label || lesson.file) + '</a></h2>' +
+        '<div class="course-block__file">' + escapeHtml(lesson.file) + '</div>' +
+      '</div>' +
       listHtml +
     '</section>';
   }

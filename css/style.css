@@ -192,30 +192,36 @@
     letter-spacing:.02em;
   }
 
-  /* repeating "제N절" block: eyebrow + title + file caption + numbered
-     section list — one per lessons.json entry, mirroring the reference
-     curriculum-index structure (lecture header followed by its own
-     numbered link list). */
+  /* repeating "제N절" card: shaded header (eyebrow + title + file caption)
+     on top of a white body listing every heading as a numbered 2-column
+     grid — one card per lessons.json entry, mirroring the reference
+     curriculum-index card layout while keeping the site's own colorset. */
   .home-grid{
     display:flex;
     flex-direction:column;
+    gap:var(--space-lg);
   }
   .course-block{
-    padding:var(--space-xl) 0;
-    border-bottom:1px solid var(--color-hairline);
+    border:1px solid var(--color-hairline);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    background:var(--color-canvas);
   }
-  .course-block:first-child{padding-top:0;}
-  .course-block:last-child{border-bottom:none;}
+  .course-block__head{
+    background:var(--color-surface-card);
+    border-bottom:1px solid var(--color-hairline);
+    padding:var(--space-lg);
+  }
   .course-block__eyebrow{
     font-size:12px;
-    font-weight:600;
+    font-weight:700;
     color:var(--color-pink);
     letter-spacing:.04em;
     margin-bottom:6px;
   }
   .course-block__title{
     font-family:var(--font-display);
-    font-weight:500;
+    font-weight:600;
     font-size:24px;
     letter-spacing:-0.3px;
     margin:0;
@@ -226,40 +232,47 @@
   }
   .course-block__title a:hover{color:var(--color-pink);}
   .course-block__file{
-    font-family:var(--font-mono);
-    font-size:12px;
-    color:var(--color-muted-soft);
-    margin:4px 0 var(--space-md);
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--color-muted);
+    margin:6px 0 0;
   }
   .course-block__empty{
     color:var(--color-muted);
     font-size:14px;
+    padding:var(--space-lg);
+    margin:0;
   }
   .course-block__list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px var(--space-lg);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    column-gap:var(--space-xl);
     list-style:none;
     margin:0;
-    padding:0;
-  }
-  .course-block__item{
-    flex:0 0 auto;
-    min-width:0;
+    padding:var(--space-sm) var(--space-lg) var(--space-md);
   }
   .course-block__item a{
-    display:inline-block;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
     color:var(--color-body);
-    font-size:14px;
+    font-size:15px;
     text-decoration:none;
-    padding:2px 0;
-    border-bottom:1px solid transparent;
+    padding:10px 0;
+    border-bottom:1px solid var(--color-hairline-soft);
   }
-  .course-block__item a:hover{color:var(--color-ink);border-bottom-color:var(--color-ink);}
-  .course-block__item--sub a{
-    color:var(--color-muted);
-    font-size:13px;
+  .course-block__item a:hover{color:var(--color-ink);}
+  .course-block__item a:hover .course-block__num{color:var(--color-pink);}
+  .course-block__num{
+    flex:none;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:14px;
+    color:var(--color-pink);
+    min-width:24px;
   }
+  .course-block__item--sub a{color:var(--color-muted);}
+  .course-block__item--sub .course-block__num{color:var(--color-muted-soft);}
 
   /* ---------- layout ---------- */
   /* .layout owns the centered reading column (width + background) so the
@@ -645,6 +658,7 @@
     .toc-pill{padding:7px 12px;font-size:11px;}
     .home-hero__title{font-size:28px;}
     .course-block__title{font-size:20px;}
+    .course-block__list{grid-template-columns:1fr;}
   }
 
   @media (max-width:600px){
