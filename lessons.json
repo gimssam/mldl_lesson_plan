@@ -1,6 +1,10 @@
 {
   "lessons": [
     {
+      "file": "ch1_파이썬및딥러닝라이브러리.md",
+      "label": "1장. 파이썬 및 딥러닝 라이브러리 환경 구성"
+    },
+    {
       "file": "ch532_신경망심층학습.md",
       "label": "5.3.7. 신경망 (Neural Networks)"
     },
