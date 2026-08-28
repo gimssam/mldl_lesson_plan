@@ -300,6 +300,26 @@
 
     var pagerEl = document.getElementById("lessonPager");
     pagerEl.innerHTML = buildPager(meta.lessons, meta.file);
+
+    scrollToHash();
+  }
+
+  // content is injected async (fetch -> innerHTML), so by the time the
+  // browser processes the URL's #hash on initial load, the target heading
+  // doesn't exist yet and the native hash-scroll silently does nothing.
+  // Do it manually once render() has finished building the DOM.
+  function scrollToHash(){
+    if(!window.location.hash) return;
+    var id = window.location.hash.slice(1);
+    var target = document.getElementById(id);
+    if(!target) return;
+    // force an instant jump: html has scroll-behavior:smooth for in-page
+    // toc-pill clicks, but an animated scroll here can get interrupted
+    // partway (e.g. by the browser's own native fragment-scroll retry
+    // once the async-rendered target appears), landing short of the
+    // target. Passing behavior:"instant" explicitly overrides the CSS
+    // smooth-scroll for this one jump so it always lands exactly.
+    target.scrollIntoView({block: "start", behavior: "instant"});
   }
 
   function boot(){

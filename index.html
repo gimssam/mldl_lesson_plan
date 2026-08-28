@@ -23,7 +23,7 @@
   <header class="home-hero">
     <span class="badge-pill badge-pink">웹 교안 · 마크다운 원본 연동</span>
     <h1 class="home-hero__title">머신러닝 · 딥러닝 강의</h1>
-    <p class="home-hero__desc">아래 목록에서 절을 선택하면 해당 교안 페이지로 이동합니다. 마크다운 원본을 수정하면 새로고침만으로 내용이 그대로 반영됩니다.</p>
+    <p class="home-hero__desc">절과 세부 목차를 클릭하면 해당 위치로 바로 이동합니다. 마크다운 원본을 수정하면 새로고침만으로 내용이 그대로 반영됩니다.</p>
     <div class="home-hero__count" id="lessonCount"></div>
   </header>
 
@@ -41,6 +41,8 @@
   <div class="note">이 페이지는 <code>lessons.json</code>을 매번 새로 불러와 전체 절 목차를 표시합니다. 새 절을 추가하면 새로고침만으로 반영됩니다.</div>
 </footer>
 
+<script src="js/vendor-marked.min.js"></script>
+<script src="js/vendor-dompurify.min.js"></script>
 <script src="js/home.js"></script>
 </body>
 </html>
