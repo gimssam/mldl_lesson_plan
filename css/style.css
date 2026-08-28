@@ -293,7 +293,7 @@
     margin:var(--space-sm) 0 var(--space-lg);
   }
 
-  /* label lines: 예제 코드 / 실행 결과 */
+  /* label lines: 예제 코드 / 실행 결과 / 코드분석 */
   .doc p.label-line{
     display:inline-flex;
     align-items:center;
@@ -301,7 +301,7 @@
     background:transparent;
     margin-bottom:var(--space-xs);
   }
-  .doc p.label-line .label-badge{
+  .doc .label-badge{
     display:inline-flex;
     align-items:center;
     background:var(--color-ink);
@@ -313,6 +313,28 @@
     border-radius:var(--radius-pill);
   }
   .doc p.label-line.label-result .label-badge{background:var(--color-ochre);color:var(--color-ink);}
+
+  /* 코드분석 토글 (details/summary) — 예제 코드 배지와 동일한 디자인 */
+  .doc details{
+    margin:0 0 var(--space-md);
+    border:1px solid var(--color-hairline);
+    border-radius:var(--radius-md);
+    background:var(--color-surface-soft);
+    padding:var(--space-xs) var(--space-sm);
+  }
+  .doc details[open]{padding-bottom:var(--space-sm);}
+  .doc details summary{
+    list-style:none;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    padding:var(--space-xxs) 0;
+  }
+  .doc details summary::-webkit-details-marker{display:none;}
+  .doc details summary::marker{content:"";}
+  .doc details summary:hover .label-badge{background:var(--color-primary-active);}
+  .doc details[open] summary{margin-bottom:var(--space-sm);}
+  .doc details pre{margin-bottom:0;}
 
   /* callouts (blockquote) */
   .doc blockquote{
