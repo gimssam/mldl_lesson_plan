@@ -332,6 +332,15 @@
   }
   .doc details summary::-webkit-details-marker{display:none;}
   .doc details summary::marker{content:"";}
+  .doc details summary::before{
+    content:"\25B6";
+    display:inline-block;
+    margin-right:8px;
+    font-size:10px;
+    color:var(--color-muted);
+    transition:transform 0.15s ease;
+  }
+  .doc details[open] summary::before{transform:rotate(90deg);}
   .doc details summary:hover .label-badge{background:var(--color-primary-active);}
   .doc details[open] summary{margin-bottom:var(--space-sm);}
   .doc details pre{margin-bottom:0;}
