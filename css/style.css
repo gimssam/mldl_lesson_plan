@@ -164,16 +164,20 @@
   .badge-pill.badge-ochre{background:var(--color-ochre);color:var(--color-ink);}
 
   /* ---------- layout ---------- */
+  /* .layout owns the centered reading column (width + background) so the
+     lighter canvas tone covers the whole column top-to-bottom — including
+     the gaps above/below the toc bar and doc — while body's darker tone
+     shows only in the true left/right margins outside the column. */
   .layout{
-    max-width:none;
+    width:72%;
+    max-width:2000px;
     margin:0 auto;
+    background:var(--color-canvas);
     padding:var(--space-xxl) var(--space-lg) var(--space-section);
   }
 
   /* ---------- top toc bar ---------- */
   .toc-bar{
-    width:72%;
-    max-width:2000px;
     margin:0 auto var(--space-xxl);
     background:var(--color-canvas);
     border:1px solid var(--color-hairline);
@@ -232,7 +236,7 @@
     background:var(--color-canvas);
     min-width:0;
   }
-  .doc{width:72%;max-width:2000px;margin:0 auto;}
+  .doc{margin:0 auto;}
 
   .doc h2{
     font-family:var(--font-display);
@@ -461,8 +465,8 @@
 
   /* responsive */
   @media (max-width:960px){
-    .doc{width:100%;max-width:100%;}
-    .toc-bar{width:100%;max-width:100%;padding:var(--space-md);}
+    .layout{width:100%;max-width:100%;}
+    .toc-bar{padding:var(--space-md);}
     .toc-pill{padding:8px 14px;font-size:13px;}
   }
 
