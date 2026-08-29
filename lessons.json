@@ -41,16 +41,16 @@
       "label": "3.4. 최적화 (Optimization)"
     },
     {
+      "file": "ch4_데이터전처리과정.md",
+      "label": "4장. 데이터 전처리 과정"
+    },
+    {
       "file": "ch532_신경망심층학습.md",
       "label": "5.3.7. 신경망 (Neural Networks)"
     },
     {
       "file": "ch54_클러스터링.md",
       "label": "5.4. 클러스터링 (Clustering) — 심화"
-    },
-    {
-      "file": "ch4_데이터전처리과정.md",
-      "label": "4장. 데이터 전처리 과정"
     }
   ]
 }
