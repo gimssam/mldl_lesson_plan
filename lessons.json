@@ -71,6 +71,22 @@
     {
       "file": "ch6_FastAPI실습.md",
       "label": "6장. FastAPI 실습"
+    },
+    {
+      "file": "ch71_PostgreSQL_시스템DDL.md",
+      "label": "7.1-7.2. PostgreSQL — 시스템 명령·DDL (1/4)"
+    },
+    {
+      "file": "ch72_PostgreSQL_DML_DCL.md",
+      "label": "7.3-7.4. PostgreSQL — DML·DCL (2/4)"
+    },
+    {
+      "file": "ch73_PostgreSQL_고급SQL집합연산.md",
+      "label": "7.5-7.6. PostgreSQL — 고급 SQL·집합 연산 (3/4)"
+    },
+    {
+      "file": "ch74_PostgreSQL_ML연동실전프로젝트.md",
+      "label": "7.7-7.8. PostgreSQL — ML 연동·실전 프로젝트 (4/4)"
     }
   ]
 }
