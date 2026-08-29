@@ -53,6 +53,10 @@
       "label": "5.1. 머신러닝 소개 — 저장·평가·예측 (2/2)"
     },
     {
+      "file": "ch52_회귀.md",
+      "label": "5.2. 회귀 (Regression)"
+    },
+    {
       "file": "ch532_신경망심층학습.md",
       "label": "5.3.7. 신경망 (Neural Networks)"
     },
