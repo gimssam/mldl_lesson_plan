@@ -25,6 +25,22 @@
       "label": "2.5. 라이브러리 사용 (NumPy/pandas/matplotlib/seaborn)"
     },
     {
+      "file": "ch31_선형대수.md",
+      "label": "3.1. 선형대수 (Linear Algebra)"
+    },
+    {
+      "file": "ch32_미적분.md",
+      "label": "3.2. 미적분 (Calculus)"
+    },
+    {
+      "file": "ch33_확률통계.md",
+      "label": "3.3. 확률 및 통계 (Probability and Statistics)"
+    },
+    {
+      "file": "ch34_최적화.md",
+      "label": "3.4. 최적화 (Optimization)"
+    },
+    {
       "file": "ch532_신경망심층학습.md",
       "label": "5.3.7. 신경망 (Neural Networks)"
     },
