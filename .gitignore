@@ -6,3 +6,6 @@ _수집데이터/
 .obsidian/
 index_template.md
 template.png
+
+# 에디터 설정(Live Server 루트 고정 등) - 배포 대상 아님
+.vscode/
