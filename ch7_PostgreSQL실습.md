@@ -1,11 +1,5 @@
 # 7장 PostgreSQL 실습
 
-7장
-
-PostgreSQL 개요·설치·클러스터 구조·서버 관리 명령·psql 기본 명령, 데이터 정의 언어(DDL) 개요·데이터 타입·제약 조건·인덱스(B-tree/GIN/BRIN)·뷰/머터리얼라이즈드 뷰·ALTER TABLE·파티셔닝·CLUSTER(7.1-7.2), 데이터 조작 언어(DML: INSERT/UPDATE/DELETE·COPY·RETURNING·트랜잭션)·데이터 제어 언어(DCL: GRANT/REVOKE·역할 관리·Row-Level Security)(7.3-7.4), 고급 SQL(서브쿼리·JOIN 5종·CTE·재귀 CTE·윈도우 함수)·집합 연산(UNION/INTERSECT/EXCEPT)·GROUP BY/HAVING·ROLLUP/CUBE(7.5-7.6), 머신러닝 연동(결측값 처리·피처 엔지니어링·GIN 전문 검색·파티셔닝·psycopg2)·실전 프로젝트 6종(추천 시스템·이탈 예측·챗봇·스팸 필터링·이미지 분류·주가 예측)(7.7-7.8)
-
-*파이썬 인공지능 풀스택 · pp.333-365*
-
 ## 7.1 PostgreSQL 개요 및 기본 시스템 명령
 
 - **PostgreSQL이란**: 1996년 첫 출시된 오픈소스 객체-관계형 DBMS(ORDBMS) — ACID 트랜잭션, JSON/JSONB/XML/HSTORE 지원, 파티셔닝·복제 기능

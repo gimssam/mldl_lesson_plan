@@ -1,9 +1,5 @@
 # FastAPI 실습
 
-6장
-
-설치·기본 사용법 · 요청 처리/검증 · PostgreSQL 연동 · PyTorch/TensorFlow 통합 · 인증/보안 · 비동기
-
 ## 6.1 FastAPI란? — 특징과 설치
 
 - **정의**: Python 3.6+ 기반의 고성능 비동기 웹 프레임워크 — 타입 힌트를 이용한 자동 데이터 검증·API 문서화가 강점
@@ -35,31 +31,55 @@ python --version
 ```
 #### 가상 환경 생성
 ```
-conda create -n fastapi_env
+conda create -n fastapi_env python=3.7.0
+```
+### 가상 환경 접속
+```
 conda activate fastapi_env
-
+```
+### pip 명령어 안될때
+```
+conda install pip
 ```
 #### FastAPI 설치
+
 ```
 pip install fastapi uvicorn
 ```
 
-#### 설치확인
+#### 설치 확인 | findstr(cmd), grep(리눅스)
 ```
-pip list | grep fastapi
+pip list | findstr fastapi
 ```
 
 **실전 코드 — 첫 FastAPI 앱**
 
-**예제 코드**: `s612_root.py`
+**예제 코드**: ex01/main.py
 
 ```python
 from fastapi import FastAPI
+# 1. FastAPI 애플리케이션 인스턴스 생성
 app = FastAPI()
+
+# 2. 루트 경로("/")에 대한 GET 요청 핸들러 정의
 @app.get("/")
 async def root():
-    return {"message": "Hello, FastAPI!"}
-# 실행: uvicorn main:app --reload
+    # 파이썬 딕셔너리를 반환하면 FastAPI가 자동으로 JSON 포맷으로 직렬화(Serialize)하여 응답
+    return {"message": "Hello, FastAPI!"}
+
+@app.get("/items/{item_id}")
+# 매개변수에 타입 힌트(int)를 지정하면 FastAPI가 자동으로 형변환과
+# 유효성 검사를 수행한다.
+# 예: /items/3 -> item_id=3(정수)으로 전달
+#     /items/abc -> 자동으로 422 Unprocessable Entity 응답
+async def read_item(item_id: int):
+    return {"item_id": item_id}
+
+# 문자열 타입 경로 매개변수 예시.
+@app.get("/users/{username}")
+# item_id와 달리 str 타입이므로 별도 형변환 없이 문자열 그대로 전달된다.
+async def read_user(username: str):
+    return {"username": username}
 ```
 
 <details>
@@ -85,15 +105,18 @@ async def root():                             # async def: 비동기 핸들러(F
 
 </details>
 
-*TestClient로 실제 HTTP GET 요청을 보내 서버 없이도 동일하게 검증 (uvicorn 서버 기동 대신 in-process 테스트)*
-
+### FastApi 실행 방법
+```
+uvicorn main:app --reload
+```
 ---
 
-**실행 결과 — 첫 FastAPI 앱**
+### API 테스트 
+#### 기본 엔드포인트 확인: http://127.0.0.1:8000/ 
+#### Swagger UI 문서 확인: http://127.0.0.1:8000/docs 
 
-**실행 완료**
 
-**실행 결과**: `s612_root`
+**실행 결과**: `main.py`
 
 ```
 GET /
@@ -105,51 +128,65 @@ GET /
 
 ---
 
-## 6.2 기본 사용법 — 프로젝트 구조와 라우팅
+## 6.2 FastAPI 기본 사용법
+FastAPI를 효과적으로 사용하기 위해서는 -> 애플리케이션 구조, 라우터 설정, HTTP 메서드, 응답 처리, HTTP 상태 코드 등을 이해하는 것이 중요함
 
 - **기본 구조**: main.py(진입점) · routers/(APIRouter별 분리) · models.py(Pydantic 모델) · database.py(DB 연결)
 
 - **경로(Path) 매개변수**: {item_id}처럼 URL 경로에 변수를 포함 — 타입 힌트(int/str)로 자동 형변환 및 검증
 
 - **APIRouter**: 라우트를 모듈 단위로 분리해 app.include_router()로 등록 — 대규모 프로젝트의 필수 패턴
+### 6.2.1. FastAPI 애플리케이션 구조
+#### 기본 프로젝트 구조
+![](images/Pasted_image_20260902143913.png)
 
----
+#### 간단한 FastAPI 프로젝트 구조
+- main.py: FastAPI 애플리케이션 실행 파일 
+- routes/: API 엔드포인트를 정의하는 폴더 
+- models/: 데이터베이스 모델을 정의하는 폴더 
+- schemas/: 요청 및 응답을 위한 데이터 스키마 정의 
+- database.py: 데이터베이스 연결 설정 
+- services.py: 비즈니스 로직을 처리하는 파일 
+- config.py: 설정 값을 관리하는 파일
 
-**실전 코드 — 경로 매개변수 및 타입 검증**
+### 6.2.2. 경로 및 라우터 설정
+API 엔드포인트를 정의할 때 라우트(route)와 경로(path) 개념을 사용
+##### (1)기본적인 경로(route) 설정
+@app.get(), @app.post(), @app.put(), @app.delete() 등의 데코레이터를 사용하여 경로를 설정
 
-**예제 코드**: `s622_routes.py`
-
+**예제 코드**: `ex01/routes/users.py`
 ```python
 from fastapi import FastAPI
-app = FastAPI()
-@app.get("/")
-async def root():
-    return {"message": "Hello, FastAPI!"}
-@app.get("/items/{item_id}")
-async def read_item(item_id: int):
-    return {"item_id": item_id}
-@app.get("/users/{username}")
+router = APIRouter(prefix="/users", tags=["users"])
+@router.get("/{username}")
 async def read_user(username: str):
-    return {"username": username}
+    return {"username": username}
+@router.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}    
 ```
+
 
 <details>
 <summary><span class="label-badge">코드분석</span></summary>
 
 ```python
 """6.2.2 경로(Path) 매개변수 및 타입 검증 — 함수 인자 타입 힌트로 자동 형변환·422 검증까지 처리"""
+# FastAPI 클래스를 임포트한다.
+# FastAPI는 파이썬 웹 프레임워크로, 요청/응답 처리, 라우팅,
+# 타입 힌트 기반 데이터 검증, API 문서 자동 생성 기능을 제공한다.
 from fastapi import FastAPI
-app = FastAPI()
-@app.get("/")
-async def root():
-    return {"message": "Hello, FastAPI!"}
-@app.get("/items/{item_id}")                  # {item_id}: URL 경로의 가변 부분을 변수로 캡처
-async def read_item(item_id: int):            # 타입 힌트 int → FastAPI가 문자열을 정수로 자동 변환 + 검증
-    return {"item_id": item_id}
-@app.get("/users/{username}")
-async def read_user(username: str):           # str은 특별한 검증 없이 그대로 전달됨(가장 느슨한 타입)
-    return {"username": username}
 
+# APIRouter 인스턴스 생성
+router = APIRouter(prefix="/users", tags=["users"])
+
+@router.get("/{username}")
+async def read_user(username: str):
+    return {"username": username}
+    
+@router.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
 # ---------------------------------------------------------------
 # [교안용 설명 포인트]
 # 1) 경로 매개변수 이름({item_id})과 함수 파라미터 이름(item_id)이 정확히 일치해야 매핑된다.
@@ -161,113 +198,17 @@ async def read_user(username: str):           # str은 특별한 검증 없이 �
 
 </details>
 
-*item_id: int 타입 힌트로 문자열 경로값을 자동 검증 — 정수가 아니면 자동으로 422 오류 반환*
+---
+**실행 결과**: `ex01/routes/users.py`
+![](images/Pasted_image_20260902153538.png)
+
+##### docs에서 테스트
+![](images/Pasted_image_20260902154356.png)
+![](images/Pasted_image_20260902154456.png)
 
 ---
 
-**실행 결과 — 경로 매개변수 (정상 + 타입 검증 실패)**
-
-**실행 완료**
-
-**실행 결과**: `s622_routes`
-
-```
-GET /items/10
-→ 200
-{
-  "item_id": 10
-}
-GET /users/alice
-→ 200
-{
-  "username": "alice"
-}
-GET /items/not-an-int (타입 검증)
-→ 422
-{
-  "detail": [
-    {
-      "type": "int_parsing",
-      "loc": [
-        "path",
-        "item_id"
-      ],
-      "msg": "Input should be a valid integer, unable to parse string as an integer",
-      "input": "not-an-int"
-    }
-  ]
-}
-```
-
----
-
-**실전 코드 — APIRouter로 모듈화**
-
-**예제 코드**: `s622_router_module.py`
-
-```python
-# items.py
-from fastapi import APIRouter
-router = APIRouter()
-@router.get("/items/{item_id}")
-async def get_item(item_id: int):
-    return {"item_id": item_id}
-# main.py
-from fastapi import FastAPI
-from items import router
-app = FastAPI()
-app.include_router(router)
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""6.2.2 APIRouter로 모듈화 — 라우트를 별도 파일로 분리하고 include_router로 앱에 결합"""
-# items.py
-from fastapi import APIRouter
-router = APIRouter()                          # FastAPI() 대신 APIRouter()로 "부분 앱" 같은 라우트 묶음 생성
-@router.get("/items/{item_id}")               # app이 아닌 router에 라우트를 등록
-async def get_item(item_id: int):
-    return {"item_id": item_id}
-
-# main.py
-from fastapi import FastAPI
-from items import router                      # 다른 파일에서 정의한 router 객체를 가져옴
-app = FastAPI()
-app.include_router(router)                    # router에 등록된 모든 라우트를 app에 합침
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) 프로젝트가 커지면 main.py 하나에 모든 라우트를 몰아 쓰기 어려워지므로 기능/도메인 단위로 파일을 분리한다.
-# 2) APIRouter는 FastAPI 인스턴스의 미니어처로, include_router 전까지는 실제 서버에 연결되지 않은 상태다.
-# 3) include_router(router, prefix="/api", tags=["items"])처럼 prefix·tags를 붙여 공통 경로/문서 그룹화도 가능하다(심화 언급용).
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*라우트를 별도 파일로 분리 후 include_router()로 등록 — 대규모 앱에서의 표준 구조*
-
----
-
-**실행 결과 — APIRouter 모듈화**
-
-**실행 완료**
-
-**실행 결과**: `s622_router_module`
-
-```
-GET /items/42 (APIRouter 모듈화)
-→ 200
-{
-  "item_id": 42
-}
-```
-
----
-
-**실전 코드 — HTTP 메서드(GET/POST/PUT/DELETE)**
+## **실전 코드 — HTTP 메서드(GET/POST/PUT/DELETE)**
 
 **예제 코드**: `s623_http_methods.py`
 
@@ -330,63 +271,38 @@ async def delete_product(product_id: int):
 *4가지 HTTP 메서드를 하나의 리소스(/products)에 매핑 — REST API의 기본 패턴*
 
 ---
-
-**실행 결과 — HTTP 메서드 4종 (1/2 — GET/POST)**
-
-**실행 완료**
-
-**실행 결과**: `s623_http_methods_1`
-
+#### FastAPI 서버 실행
 ```
-GET /products/1
-→ 200
-{
-  "product_id": 1,
-  "name": "Laptop",
-  "price": 1200
-}
-POST /products/
-{
-  "name": "Monitor",
-  "price": 300
-}
-→ 200
-{
-  "message": "Monitor created!",
-  "price": 300.0
-}
+uvicorn s623_http_methods:app --reload
 ```
+
+**실행 결과 — HTTP 메서드 4종 (1/2 — GET/POST/PUT/DELETE)**
+
+**FastAPI에 접속하여 결과 확인**
+---
+![](images/Pasted_image_20260902162029.png)
 
 ---
-
-**실행 결과 — HTTP 메서드 4종 (2/2 — PUT/DELETE)**
-
-**실행 완료**
-
-**실행 결과**: `s623_http_methods_2`
+## **실전 코드 — JSON/HTML 응답**
 
 ```
-PUT /products/1
-{
-  "name": "Laptop Pro",
-  "price": 1500
-}
-→ 200
-{
-  "product_id": 1,
-  "updated_name": "Laptop Pro",
-  "updated_price": 1500.0
-}
-DELETE /products/1
-→ 200
-{
-  "message": "Product 1 deleted"
-}
+pip install jinja2    -- 설치후 서버 실행
+uvicorn s624_response:app --reload -- 서버 실행
 ```
 
----
-
-**실전 코드 — JSON/HTML 응답**
+**예제 코드**: `ex01/templates/index.html` 이 꼭 있어야 API /html 호출 시 실행됨
+```
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FastAPI Jinja2</title>
+</head>
+<body>
+    <h1>{{ message }}</h1>
+</body>
+</html>
+```
 
 **예제 코드**: `s624_response.py`
 
@@ -434,40 +350,13 @@ async def html_response(request: Request):           # HTML 렌더링 시 Reques
 
 </details>
 
-*화면에는 책 원문 구문(구형 TemplateResponse 시그니처) 그대로 표시*
+### **실행 결과 — JSON/HTML 응답**
+
+![](images/Pasted_image_20260902175635.png)
 
 ---
 
-**실행 결과 — JSON/HTML 응답**
-
-**실행 완료**
-
-**실행 결과**: `s624_response`
-
-```
-GET /json
-→ 200
-{
-  "message": "This is a JSON response"
-}
-GET /html
-→ 200  (Content-Type: text/html; charset=utf-8)
-<!DOCTYPE html>
-<html>
-<head>
-<title>FastAPI Example</title>
-</head>
-<body>
-<h1>Hello, FastAPI with Jinja2!</h1>
-</body>
-</html>
-```
-
-*※ 이 샌드박스의 starlette 버전은 구형 TemplateResponse(name, {"request":...}) 시그니처를 더 이상 지원하지 않아, harness에서만 신형 시그니처 TemplateResponse(request, name, context)로 호출(라이브러리 버전 차이 — 책의 코드 자체는 오류 없음)*
-
----
-
-**실전 코드 — 상태 코드 및 예외 처리**
+## **실전 코드 — 상태 코드 및 예외 처리**
 
 **예제 코드**: `s625_status.py`
 
@@ -520,14 +409,14 @@ async def custom_http_exception_handler(request, exc):
 </details>
 
 *201 상태코드 명시, HTTPException 발생, 커스텀 예외 핸들러로 응답 형식 변경까지 한 번에 확인*
+![](images/Pasted%20image%2020260902182030.png)
+
+> 200_OK로 코드 바꾸면 아래와 같이 나옴
+> ![](images/Pasted%20image%2020260902181915.png)
 
 ---
 
-**실행 결과 — 상태 코드 및 커스텀 예외 처리**
-
-**실행 완료**
-
-**실행 결과**: `s625_status`
+## **실행 결과 — 상태 코드 및 커스텀 예외 처리**
 
 ```
 POST /create
@@ -563,7 +452,7 @@ GET /items/5
 
 ---
 
-**실전 코드 — Path/Query/Body 매개변수**
+## **실전 코드 — Path/Query/Body 매개변수**
 
 **예제 코드**: `s631_path_query_body.py`
 
@@ -625,11 +514,7 @@ async def create_item(item: Item):     # 함수 인자 타입이 BaseModel이면
 
 ---
 
-**실행 결과 — Path/Query/Body 4종 요청 (1/2)**
-
-**실행 완료**
-
-**실행 결과**: `s631_path_query_body_1`
+### **실행 결과 — Path/Query/Body 4종 요청 (1/2)**
 
 ```
 GET /items/10
@@ -647,11 +532,7 @@ GET /search?keyword=laptop&limit=5
 
 ---
 
-**실행 결과 — Path/Query/Body 4종 요청 (2/2)**
-
-**실행 완료**
-
-**실행 결과**: `s631_path_query_body_2`
+### **실행 결과 — Path/Query/Body 4종 요청 (2/2)**
 
 ```
 GET /search?keyword=phone (limit 기본값)
@@ -675,7 +556,11 @@ POST /items/ (description 생략)
 
 ---
 
-**실전 코드 — Pydantic Field·EmailStr 검증**
+## **실전 코드 — Pydantic Field·EmailStr 검증**
+```
+pip install email-validator
+uvicorn s632_validation:app --reload
+```
 
 **예제 코드**: `s632_validation.py`
 
@@ -735,13 +620,10 @@ async def create_user(user: User):
 
 *min_length=3, gt=0 등 제약 위반 시 실제 422 오류와 상세 위치(loc)까지 함께 반환됨을 확인*
 
+
 ---
 
-**실행 결과 — Field 검증 (products, 실패/성공)**
-
-**실행 완료**
-
-**실행 결과**: `s632_validation_1`
+### **실행 결과 — Field 검증 (products, 실패/성공)**
 
 ```
 POST /products/ (price=-100, 검증 실패)
@@ -793,11 +675,11 @@ POST /products/ (정상)
 
 ---
 
-**실행 결과 — EmailStr 검증 (users, 실패/성공)**
+### **실행 결과 — EmailStr 검증 (users, 실패/성공)**
 
-**실행 완료**
-
-**실행 결과**: `s632_validation_2`
+Post 값에 @이메일 주소 안붙이면 422에러 남
+![](images/Pasted%20image%2020260902185112.png)
+![](images/Pasted%20image%2020260902185155.png)
 
 ```
 POST /users/ (잘못된 이메일)
@@ -834,9 +716,10 @@ POST /users/ (정상)
 }
 ```
 
----
+![](images/Pasted%20image%2020260902184902.png)
 
-**실전 코드 — Header/Cookie 의존성**
+---
+## **실전 코드 — Header/Cookie 의존성**
 
 **예제 코드**: `s633_header_cookie.py`
 
@@ -878,14 +761,7 @@ async def read_cookies(session_id: str = Cookie(None)):   # 'session_id' 쿠키 
 </details>
 
 *Header()/Cookie() 의존성으로 요청 헤더·쿠키 값을 함수 인자처럼 자동 주입*
-
----
-
-**실행 결과 — Header/Cookie 추출**
-
-**실행 완료**
-
-**실행 결과**: `s633_header_cookie`
+### **실행 결과 — Header/Cookie 추출**
 
 ```
 GET /headers/ (User-Agent: Mozilla/5.0)
@@ -899,10 +775,11 @@ GET /cookies/ (Cookie: session_id=abc123)
   "session_id": "abc123"
 }
 ```
+![](images/Pasted%20image%2020260902203227.png)
 
 ---
 
-**실전 코드 — 쿼리+바디 결합**
+## **실전 코드 — 쿼리+바디 결합**
 
 **예제 코드**: `s634_query_body_combo.py`
 
@@ -939,14 +816,7 @@ async def create_order(order_id: int, quantity: int, customer: str, address: str
 </details>
 
 *address는 기본값 None — 생략 시 결과에서 null로 확인 가능*
-
----
-
-**실행 결과 — 쿼리+바디 결합**
-
-**실행 완료**
-
-**실행 결과**: `s634_query_body_combo`
+### **실행 결과 — 쿼리+바디 결합**
 
 ```
 POST /order/?order_id=123&quantity=2&customer=John
@@ -959,9 +829,15 @@ POST /order/?order_id=123&quantity=2&customer=John
 }
 ```
 
+![](images/Pasted%20image%2020260902203529.png)
+
 ---
 
-**실전 코드 — 파일 업로드(단일/다중)**
+## **실전 코드 — 파일 업로드(단일/다중)**
+```
+pip install python-multipart
+uvicorn s635_file_upload:app --reload
+```
 
 **예제 코드**: `s635_file_upload.py`
 
@@ -1006,14 +882,7 @@ async def upload_multiple_files(files: List[UploadFile] = File(...)):   # 다중
 </details>
 
 *TestClient로 실제 바이너리 파일 데이터를 전송해 파일명·MIME 타입 인식을 검증*
-
----
-
-**실행 결과 — 단일/다중 파일 업로드**
-
-**실행 완료**
-
-**실행 결과**: `s635_file_upload`
+### **실행 결과 — 단일/다중 파일 업로드**
 
 ```
 POST /upload/ (image.jpg)
@@ -1032,6 +901,8 @@ POST /upload-multiple/ (a.txt, b.txt)
 }
 ```
 
+![](images/Pasted%20image%2020260902203807.png)
+
 ---
 
 ## 6.4 의존성 주입 및 PostgreSQL 연동 — 개요
@@ -1040,7 +911,7 @@ POST /upload-multiple/ (a.txt, b.txt)
 
 - **SQLAlchemy 연동**: create_engine + sessionmaker로 DB 세션 생성 → Depends(get_db)로 각 요청마다 세션 주입
 
-- **연결 정보**: postgresql://postgres:1234@localhost/company — 실제 이 샌드박스의 PostgreSQL 16 서버와 정확히 일치
+- **연결 정보**: postgresql://postgres:1111@localhost/company — 실제 이 샌드박스의 PostgreSQL 16 서버와 정확히 일치
 
 - **CRUD**: Employee 모델(id, name, age, department, salary) 기준 Create/Read/Update/Delete 4종 엔드포인트
 
@@ -1091,10 +962,6 @@ async def root(dep: str = Depends(common_dependency)):  # Depends(...)가 실행
 
 **실행 결과 — 기본 의존성 주입**
 
-**실행 완료**
-
-**실행 결과**: `s641_di`
-
 ```
 GET / (Depends(common_dependency))
 → 200
@@ -1105,7 +972,14 @@ GET / (Depends(common_dependency))
 
 ---
 
-**실전 코드 — PostgreSQL 연동 + Employee CRUD**
+### **실전 코드 — PostgreSQL 연동 + Employee CRUD**
+```
+pip install sqlalchemy
+pip install psycopg2
+uvicorn s644_crud_postgres:app --reload
+```
+
+> PUT 할때 실제 eployees 테이블에 있는 id pk 있는 번호로 테스트 함 => 1
 
 **예제 코드**: `s644_crud_postgres.py`
 
@@ -1113,7 +987,7 @@ GET / (Depends(common_dependency))
 from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
-DATABASE_URL = "postgresql://postgres:1234@localhost/company"
+DATABASE_URL = "postgresql://postgres:11114@localhost/company"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -1166,7 +1040,7 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
 from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
-DATABASE_URL = "postgresql://postgres:1234@localhost/company"  # 접속 문자열(계정/비번/호스트/DB명)
+DATABASE_URL = "postgresql://postgres:1111@localhost/company"  # 접속 문자열(계정/비번/호스트/DB명)
 engine = create_engine(DATABASE_URL)  # DB와의 실제 연결을 관리하는 엔진 객체
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # 세션 팩토리
 Base = declarative_base()  # 모델 클래스들이 상속받을 기본 클래스
@@ -1225,10 +1099,6 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
 
 **실행 결과 — 실제 PostgreSQL CRUD (1/2 — POST/GET)**
 
-**실행 완료**
-
-**실행 결과**: `s644_crud_postgres_1`
-
 ```
 POST /employees/ (실제 PostgreSQL company DB에 INSERT)
 → 200
@@ -1263,11 +1133,8 @@ GET /employees/1
 
 ---
 
-**실행 결과 — 실제 PostgreSQL CRUD (2/2 — PUT/DELETE, 책 코드의 버그)**
+**실행 결과 — 실제 PostgreSQL CRUD (2/2 — PUT/DELETE)**
 
-**실행 완료**
-
-**실행 결과**: `s644_crud_postgres_2`
 
 ```
 PUT /employees/1
@@ -1296,36 +1163,70 @@ DELETE /employees/1
 
 ---
 
-**실전 코드 — PyTorch 모델 로드 및 예측**
+### **실전 코드 — PyTorch 모델 로드 및 예측**
+```
+pip install "numpy<2.0.0"
+python -c "import torch, torch.nn as nn; torch.save(nn.Linear(10, 1).state_dict(), 'model.pth')"
+uvicorn s651_pytorch_predict:app --reload
+```
 
 **예제 코드**: `s651_pytorch_predict.py`
 
 ```python
-import torch, torch.nn as nn
+"""
+PyTorch Linear 모델 기반 FastAPI 실시간 예측 API 서빙 예제
+"""
+import torch
+import torch.nn as nn
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
+
+# 1. 모델 아키텍처 정의
 class SimpleModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fc = nn.Linear(10, 1)
-    def forward(self, x):
-        return self.fc(x)
+    def __init__(self):
+        super().__init__()
+        self.fc = nn.Linear(10, 1)
+
+    def forward(self, x):
+        return self.fc(x)
+
+# 2. 모델 인스턴스 생성 및 안전한 로드 (해결 방법 2 적용)
 model = SimpleModel()
-model.load_state_dict(torch.load("model.pth"))
+try:
+    # 기존 가중치 파일 로드 시도
+    model.load_state_dict(torch.load("model.pth", map_location="cpu"))
+except (RuntimeError, FileNotFoundError):
+    # 파일이 없거나 state_dict 키(fc.weight 등)가 불일치하면
+    # 현재 SimpleModel 규격으로 model.pth를 새로 생성하여 로드
+    torch.save(model.state_dict(), "model.pth")
+    model.load_state_dict(torch.load("model.pth", map_location="cpu"))
+
+# 추론 모드 전환
 model.eval()
+
+# 3. 추론 함수 정의
 def predict(input_data: list):
-    input_tensor = torch.tensor(input_data, dtype=torch.float32)
-    with torch.no_grad():
-        output = model(input_tensor)
-    return output.numpy().tolist()
-app = FastAPI()
+    input_tensor = torch.tensor(input_data, dtype=torch.float32)
+    # 1차원 데이터가 들어올 경우를 대비해 배치 차원 추가 ([10] -> [1, 10])
+    if input_tensor.ndim == 1:
+        input_tensor = input_tensor.unsqueeze(0)
+    with torch.no_grad():
+        output = model(input_tensor)
+    return output.squeeze().tolist()
+    
+# 4. FastAPI 인스턴스 생성
+app = FastAPI(title="PyTorch Model Serving")
+
+# 5. Pydantic 요청 스키마 정의
 class InputData(BaseModel):
-    features: List[float]
+    features: List[float]
+
+# 6. 실시간 예측 엔드포인트
 @app.post("/predict/")
 def predict_api(input_data: InputData):
-    prediction = predict(input_data.features)
-    return {"prediction": prediction}
+    prediction = predict(input_data.features)
+    return {"prediction": prediction}
 ```
 
 <details>
@@ -1335,30 +1236,139 @@ def predict_api(input_data: InputData):
 """
 6.5.1 PyTorch 모델 로드 및 FastAPI 예측 API 구현
 """
-import torch, torch.nn as nn
+"""
+PyTorch Linear 모델 기반 FastAPI 실시간 예측 API 서빙 예제
+"""
+
+import torch
+import torch.nn as nn
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
+
+# 1. 모델 아키텍처 정의
 class SimpleModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc = nn.Linear(10, 1)  # 입력 10차원 → 출력 1차원의 단순 선형 계층
+        # 입력 특성 수: 10, 출력: 1 (회귀 또는 이진 분류 전 단계)
+        self.fc = nn.Linear(10, 1)
+
     def forward(self, x):
         return self.fc(x)
+
+# 2. 모델 인스턴스 생성 및 가중치 파일 로드
 model = SimpleModel()
-model.load_state_dict(torch.load("model.pth"))  # 미리 학습되어 저장된 가중치 파일을 불러옴
-model.eval()  # 추론 모드 전환(Dropout/BatchNorm 등을 비활성화)
+
+# map_location='cpu'를 지정하면 GPU에서 학습된 가중치도 CPU 전용 서버에서 에러 없이 로드 가능
+# weights_only=True 옵션은 파이토치 최신 버전에서 임의 코드 실행 보안 취약점을 방지합니다.
+model.load_state_dict(torch.load("model.pth", map_location="cpu", weights_only=True))
+
+# 평가/추론 전용 모드 전환 (Dropout, BatchNorm 등의 동작을 추론용으로 고정)
+model.eval()
+
+# 3. 추론 함수 정의
 def predict(input_data: list):
-    input_tensor = torch.tensor(input_data, dtype=torch.float32)  # 파이썬 리스트 → 텐서 변환
-    with torch.no_grad():  # 추론 시 그래디언트 계산을 꺼서 메모리·속도 최적화
+    # 입력 리스트를 PyTorch Tensor로 변환
+    input_tensor = torch.tensor(input_data, dtype=torch.float32)
+    
+    # 1차원 데이터([10])가 들어올 경우 모델 연산을 위해 배치 차원 추가 -> shape: [1, 10]
+    if input_tensor.ndim == 1:
+        input_tensor = input_tensor.unsqueeze(0)
+    
+    # 기울기(Gradient) 계산 비활성화 (메모리 절약 및 연산 속도 향상)
+    with torch.no_grad():
         output = model(input_tensor)
-    return output.numpy().tolist()  # 텐서를 JSON 응답 가능한 파이썬 리스트로 변환
-app = FastAPI()
+    # 파이토치 핵심 모듈(텐서 연산) 및 신경망 계층(nn.Module, nn.Linear 등)을 임포트한다.
+import torch
+import torch.nn as nn
+
+# FastAPI 프레임워크와 요청 데이터 검증을 위한 Pydantic BaseModel을 임포트한다.
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
+
+# -------------------------------------------------------------
+# 1. 모델 아키텍처 정의
+# -------------------------------------------------------------
+# PyTorch의 모든 신경망 모듈은 nn.Module을 상속받아 구현한다.
+class SimpleModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # 10개의 입력 특성을 받아 1개의 출력값을 계산하는 단일 선형 회귀(Linear) 레이어 정의
+        # 내부 파라미터는 'fc.weight'와 'fc.bias'라는 이름으로 관리된다.
+        self.fc = nn.Linear(10, 1)
+
+    def forward(self, x):
+        # 순전파 연산: x에 가중치를 곱하고 편향을 더해(Wx + b) 반환한다.
+        return self.fc(x)
+
+# -------------------------------------------------------------
+# 2. 모델 인스턴스 생성 및 안전한 가중치 로드
+# -------------------------------------------------------------
+# 정의된 구조를 기반으로 모델 인스턴스를 메모리에 생성한다.
+model = SimpleModel()
+
+try:
+    # 기존 가중치 파일(model.pth)을 CPU 디바이스에 맞춰 로드한다.
+    # map_location="cpu": GPU에서 학습된 가중치 파일도 CPU 전용 서버에서 에러 없이 로드하도록 설정
+    model.load_state_dict(torch.load("model.pth", map_location="cpu"))
+except (RuntimeError, FileNotFoundError):
+    # 파일이 아직 없거나(FileNotFoundError),
+    # 기존 파일의 레이어 이름이 현재 클래스(fc.weight 등)와 맞지 않아 키 불일치가 발생할 경우(RuntimeError):
+    # 1) 현재 SimpleModel의 초기 가중치 상태를 파일로 새로 저장한다.
+    torch.save(model.state_dict(), "model.pth")
+    # 2) 새로 생성한 가중치 파일을 다시 로드하여 런타임 오류를 방지한다.
+    model.load_state_dict(torch.load("model.pth", map_location="cpu"))
+
+# 모델을 추론/평가 모드로 전환한다.
+# Dropout, BatchNorm 등의 레이어가 학습 모드에서 추론 모드로 고정된다.
+model.eval()
+
+# -------------------------------------------------------------
+# 3. 추론 함수 정의
+# -------------------------------------------------------------
+def predict(input_data: list):
+    # 클라이언트로부터 전달받은 파이썬 리스트를 32비트 부동소수점 텐서로 변환한다.
+    input_tensor = torch.tensor(input_data, dtype=torch.float32)
+
+    # PyTorch 레이어는 기본적으로 [배치 크기, 입력 차원]의 2차원 입력을 요구한다.
+    # 1차원 데이터([10])가 들어온 경우 0번 축에 차원을 추가하여 2차원([1, 10]) 형태로 맞춘다.
+    if input_tensor.ndim == 1:
+        input_tensor = input_tensor.unsqueeze(0)
+
+    # 추론 시에는 역전파(Backpropagation)에 필요한 기울기(Gradient)를 계산할 필요가 없으므로
+    # torch.no_grad()를 적용해 메모리 사용량을 줄이고 추론 속도를 높인다.
+    with torch.no_grad():
+        output = model(input_tensor)
+
+    # 연산 결과 텐서에서 불필요한 1차원 축을 제거(squeeze)한 후,
+    # JSON 직렬화가 가능하도록 파이썬 표준 리스트(또는 단일 float)로 변환하여 반환한다.
+    return output.squeeze().tolist()
+
+# -------------------------------------------------------------
+# 4. FastAPI 인스턴스 생성
+# -------------------------------------------------------------
+# 웹 애플리케이션 진입점 생성 (Swagger 문서의 제목 설정)
+app = FastAPI(title="PyTorch Model Serving")
+
+# -------------------------------------------------------------
+# 5. Pydantic 요청 스키마 정의
+# -------------------------------------------------------------
+# HTTP POST 요청 본문(JSON Body)의 데이터 규격을 정의한다.
+# 클라이언트가 보낸 JSON의 "features" 키가 float 리스트 형태인지 자동으로 검증한다.
 class InputData(BaseModel):
-    features: List[float]  # 요청 바디 검증용 Pydantic 스키마
+    features: List[float]
+
+# -------------------------------------------------------------
+# 6. 실시간 예측 엔드포인트
+# -------------------------------------------------------------
+# POST /predict/ 경로로 들어오는 요청을 처리하는 핸들러 함수
 @app.post("/predict/")
 def predict_api(input_data: InputData):
+    # Pydantic을 통과해 유효성이 검증된 features 리스트를 추론 함수로 전달한다.
     prediction = predict(input_data.features)
+    
+    # 모델 예측 결과를 딕셔너리로 감싸서 반환하면 FastAPI가 JSON 포맷으로 자동 응답한다.
     return {"prediction": prediction}
 
 # ---------------------------------------------------------------
@@ -1372,64 +1382,77 @@ def predict_api(input_data: InputData):
 
 </details>
 
-*책에 model.pth 파일이 제공되지 않아, harness에서 동일 구조(nn.Linear(10,1))로 무작위 초기화된 실제 가중치를 저장 후 다시 로드 — torch.load()와 순전파 자체는 100% 실제 실행*
+---
+
+### **실행 결과 — PyTorch 모델 예측**
+> API 테스트시 Edit Value에 JSON 값 넣어줌 =>
+> {
+  "features": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+}
+
+![](images/Pasted%20image%2020260902224845.png)
+![](images/Pasted%20image%2020260902225029.png)
 
 ---
 
-**실행 결과 — PyTorch 모델 예측**
-
-**실행 완료**
-
-**실행 결과**: `s651_pytorch_predict`
-
+### **실전 코드 — TensorFlow 모델 통합**
+#### 모듈 설치
 ```
-(사전 학습된 model.pth가 책에 제공되지 않아, 동일 구조(nn.Linear(10,1))로 무작위 초기화된 실제 가중치를 저장 후 다시 로드해 사용 — 예측 알고리즘 자체는 100% 실제 PyTorch 순전파)
-POST /predict/
-{
-  "features": [
-    0.5,
-    1.2,
-    -0.3,
-    0.8,
-    2.5,
-    -1.3,
-    0.7,
-    0.4,
-    -0.6,
-    1.5
-  ]
-}
-→ 200
-{
-  "prediction": [
-    -0.17775177955627441
-  ]
-}
+pip install tensorflow "numpy<2.0.0"  -- 텐서플로우 버전충돌
+pip uninstall -y tensorflow
+pip install "tensorflow<2.13.0"
+pip install "urllib3<2.0.0"
 ```
-
----
-
-**실전 코드 — TensorFlow 모델 통합**
 
 **예제 코드**: `s652_tensorflow_predict.py`
 
 ```python
-import numpy as np, tensorflow as tf
+import collections
+import os
+from typing import List
+import typing
+import typing_extensions
+
+# 1. Python 3.7 typing 호환성 패치 (OrderedDict 제네릭 지원)
+typing.OrderedDict = typing_extensions.OrderedDict
+
+import numpy as np
+import tensorflow as tf
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
-model = tf.keras.models.load_model("model.h5")
-def predict_tf(input_data: list):
-    input_array = np.array([input_data])
-    prediction = model.predict(input_array)
-    return prediction.tolist()
-app = FastAPI()
+
+# 2. model.h5 자동 생성 및 로드
+MODEL_PATH = "model.h5"
+
+if not os.path.exists(MODEL_PATH):
+    # 입력 특성 10개, 출력 1개인 회귀 모델 생성 및 저장
+    dummy_model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(10,)),
+        tf.keras.layers.Dense(1)
+    ])
+    dummy_model.compile(optimizer="adam", loss="mse")
+    dummy_model.save(MODEL_PATH)
+
+# 모델 로드
+model = tf.keras.models.load_model(MODEL_PATH)
+
+# 3. FastAPI 앱 및 Pydantic 스키마 정의
+app = FastAPI(title="TensorFlow Model Serving")
+
 class InputData(BaseModel):
     features: List[float]
-@app.post("/predict_tf/")
-def predict_api_tf(input_data: InputData):
-    prediction = predict_tf(input_data.features)
-    return {"prediction": prediction}
+
+# 4. 실시간 예측 엔드포인트
+@app.post("/predict/")
+def predict_api(input_data: InputData):
+    # 입력 데이터 shape를 [1, 10]으로 변환
+    input_array = np.array([input_data.features], dtype=np.float32)
+    
+    # Keras 추론 실행
+    prediction = model.predict(input_array, verbose=0)
+    
+    # JSON 직렬화를 위해 float 값으로 반환
+    return {"prediction": float(prediction.squeeze())}
 ```
 
 <details>
@@ -1439,28 +1462,55 @@ def predict_api_tf(input_data: InputData):
 """
 6.5.2 TensorFlow(Keras) 모델을 FastAPI 예측 API로 통합
 """
-import numpy as np, tensorflow as tf
+import collections
+import os
+from typing import List
+import typing
+import typing_extensions
+
+# 1. Python 3.7 typing 호환성 패치 (OrderedDict 제네릭 지원)
+typing.OrderedDict = typing_extensions.OrderedDict
+
+import numpy as np
+import tensorflow as tf
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
-model = tf.keras.models.load_model("model.h5")  # 저장된 Keras 모델 파일(.h5)을 서버 시작 시 로드
-def predict_tf(input_data: list):
-    input_array = np.array([input_data])  # 배치 차원을 추가해 2차원 배열로 변환(예: (10,) → (1,10))
-    prediction = model.predict(input_array)
-    return prediction.tolist()
-app = FastAPI()
+
+# 2. model.h5 자동 생성 및 로드
+MODEL_PATH = "model.h5"
+
+if not os.path.exists(MODEL_PATH):
+    # 입력 특성 10개, 출력 1개인 회귀 모델 생성 및 저장
+    dummy_model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(10,)),
+        tf.keras.layers.Dense(1)
+    ])
+    dummy_model.compile(optimizer="adam", loss="mse")
+    dummy_model.save(MODEL_PATH)
+
+# 모델 로드
+model = tf.keras.models.load_model(MODEL_PATH)
+
+# 3. FastAPI 앱 및 Pydantic 스키마 정의
+app = FastAPI(title="TensorFlow Model Serving")
+
 class InputData(BaseModel):
     features: List[float]
-@app.post("/predict_tf/")
-def predict_api_tf(input_data: InputData):
-    prediction = predict_tf(input_data.features)
-    return {"prediction": prediction}
+
+# 4. 실시간 예측 엔드포인트
+@app.post("/predict/")
+def predict_api(input_data: InputData):
+    # 입력 데이터 shape를 [1, 10]으로 변환
+    input_array = np.array([input_data.features], dtype=np.float32)
+    
+    # Keras 추론 실행
+    prediction = model.predict(input_array, verbose=0)
+    
+    # JSON 직렬화를 위해 float 값으로 반환
+    return {"prediction": float(prediction.squeeze())}
 
 # ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) PyTorch 버전(6.5.1)과 흐름은 동일 — 모델을 전역에서 한 번만 로드하고 요청마다 predict만 호출한다.
-# 2) Keras의 model.predict()는 배치 입력을 기대하므로 np.array([input_data])로 차원을 하나 더 감싸줘야 한다.
-# 3) numpy 배열도 텐서와 마찬가지로 JSON 직렬화가 안 되므로 .tolist()로 변환한다.
+# [교안용 설명 포인트].
 # ---------------------------------------------------------------
 ```
 
@@ -1470,74 +1520,117 @@ def predict_api_tf(input_data: InputData):
 
 ---
 
-**실행 결과 — TensorFlow 모델 예측**
+### **실행 결과 — TensorFlow 모델 예측**
 
-**실행 완료**
+![](images/Pasted%20image%2020260902232554.png)
 
-**실행 결과**: `s652_tensorflow_predict`
-
-```
-(사전 학습된 model.h5가 책에 제공되지 않아, 동일 구조(Dense(1))의 실제 Keras 모델을 만들어 저장 후 다시 로드 — tf.keras.models.load_model()과 실제 예측은 100% 실행)
-POST /predict_tf/
-{
-  "features": [
-    0.5,
-    1.2,
-    -0.3,
-    0.8,
-    2.5,
-    -1.3,
-    0.7,
-    0.4,
-    -0.6,
-    1.5
-  ]
-}
-→ 200
-{
-  "prediction": [
-    [
-      0.7612043619155884
-    ]
-  ]
-}
-```
-
-*※ 책에 model.h5 파일이 제공되지 않아 동일 구조(Dense(1))로 실제 모델을 만들어 저장 후 재로드 — 예측은 100% 실제 Keras 실행. load_model() 기본값(compile=True)은 이 샌드박스의 Keras 버전에서 레거시 HDF5 컴파일 정보 역직렬화 오류가 발생해 compile=False로 로드(환경 문제, 화면 코드는 원문 그대로)*
 
 ---
 
-**실전 코드 — 모델 학습 + PostgreSQL 버전 저장**
+### **실전 코드 — 모델 학습 + PostgreSQL 버전 저장**
 
 **예제 코드**: `s653_train.py`
 
 ```python
-import torch, torch.nn as nn, torch.optim as optim
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from datetime import datetime
+import datetime
+from typing import List
+from fastapi import Depends, FastAPI, HTTPException
+import numpy as np
+from pydantic import BaseModel
+from sqlalchemy import Column, DateTime, Float, Integer, String, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+# -------------------------------------------------------------
+# 1. 데이터베이스 설정 (SQLite)
+# -------------------------------------------------------------
+DATABASE_URL = "sqlite:///./models.db"
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+# -------------------------------------------------------------
+# 2. SQLAlchemy ORM 모델 정의
+# -------------------------------------------------------------
+
 class ModelVersion(Base):
-    __tablename__ = "model_versions"
-    id = Column(Integer, primary_key=True, index=True)
-    version = Column(String, unique=True, index=True)
-    accuracy = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
-@app.post("/train/")
-def train_model(db: Session = Depends(get_db)):
-    X_train = torch.randn(100, 10)
-    y_train = torch.randn(100, 1)
-    model = SimpleModel()
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
-    for epoch in range(100):
-        optimizer.zero_grad()
-        loss = criterion(model(X_train), y_train)
-        loss.backward()
-        optimizer.step()
-    torch.save(model.state_dict(), "model.pth")
-    new_version = ModelVersion(version="1.0", accuracy=0.95)
-    db.add(new_version); db.commit()
-    return {"message": "Model trained and saved", "accuracy": 0.95}
+    __tablename__ = "model_versions"
+    id = Column(Integer, primary_key=True, index=True)
+    version = Column(String, unique=True, index=True)
+    accuracy_or_loss = Column(Float)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+# DB 테이블 자동 생성
+Base.metadata.create_all(bind=engine)
+
+# DB 세션 의존성 주입 함수
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+# -------------------------------------------------------------
+# 3. FastAPI 및 Pydantic 스키마 정의
+# -------------------------------------------------------------
+app = FastAPI(title="Model Training & Versioning API")
+
+class TrainRequest(BaseModel):
+    version: str
+    description: str = "Linear Regression Model Training"
+    epochs: int = 100
+    
+class ModelVersionResponse(BaseModel):
+    id: int
+    version: str
+    accuracy_or_loss: float
+    description: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True  # Pydantic v2 호환 (v1일 경우 orm_mode = True)
+# -------------------------------------------------------------
+# 4. 학습 엔드포인트
+# -------------------------------------------------------------
+
+@app.post("/train/", response_model=ModelVersionResponse)
+def train_model(request: TrainRequest, db: Session = Depends(get_db)):
+    # 1) 동일 버전 중복 검사
+    existing_version = (
+        db.query(ModelVersion)
+        .filter(ModelVersion.version == request.version)
+        .first()
+    )
+
+    if existing_version:
+        raise HTTPException(
+            status_code=400, detail=f"Version '{request.version}' already exists."
+        )
+
+    # 2) 모델 학습 로직 (더미 학습 예시: y = 2x + 1)
+    x_data = np.random.rand(100, 10).astype(np.float32)
+
+    # 실제 학습을 대신하여 모의 손실(Loss) 계산
+    simulated_loss = float(np.random.uniform(0.01, 0.1))
+
+    # 3) DB에 학습 메타데이터 기록
+    model_record = ModelVersion(
+        version=request.version,
+        accuracy_or_loss=simulated_loss,
+        description=request.description,
+    )
+    db.add(model_record)
+    db.commit()
+    db.refresh(model_record)
+
+    return model_record
+# -------------------------------------------------------------
+# 5. 버전 목록 조회 엔드포인트
+# -------------------------------------------------------------
+@app.get("/versions/", response_model=List[ModelVersionResponse])
+def list_model_versions(db: Session = Depends(get_db)):
+    versions = (
+        db.query(ModelVersion).order_by(ModelVersion.id.desc()).all()
+    )
+    return versions
 ```
 
 <details>
@@ -1547,32 +1640,154 @@ def train_model(db: Session = Depends(get_db)):
 """
 6.5.3 PyTorch 모델 학습 API + PostgreSQL에 모델 버전 기록 저장
 """
-import torch, torch.nn as nn, torch.optim as optim
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from datetime import datetime
-class ModelVersion(Base):  # 6.4절에서 정의한 Base를 그대로 재사용(같은 앱 파일 내 이어지는 코드)
+import datetime
+from typing import List
+
+# FastAPI 프레임워크 핵심 모듈 및 의존성 주입(Depends), 예외 처리(HTTPException)를 임포트한다.
+from fastapi import Depends, FastAPI, HTTPException
+# 데이터 전처리 및 수치 연산을 위한 NumPy를 임포트한다.
+import numpy as np
+# 요청/응답 본문의 데이터 유효성 검증을 위한 Pydantic BaseModel을 임포트한다.
+from pydantic import BaseModel
+# SQLAlchemy ORM 매핑 및 DB 엔진 생성을 위한 컴포넌트들을 임포트한다.
+from sqlalchemy import Column, DateTime, Float, Integer, String, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+# -------------------------------------------------------------
+# 1. 데이터베이스 설정 (SQLite)
+# -------------------------------------------------------------
+# 로컬 디렉터리에 models.db 파일 형태로 저장되는 SQLite DB URL을 정의한다.
+DATABASE_URL = "sqlite:///./models.db"
+
+# 데이터베이스 연결 엔진 생성
+# connect_args={"check_same_thread": False}:
+# SQLite는 기본적으로 동일 스레드 접근만 허용하므로, FastAPI 멀티스레드 비동기 환경에서 동작할 수 있도록 제한을 해제한다.
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+# DB 세션을 생성하는 팩토리(SessionLocal)를 정의한다.
+# autocommit=False: 명시적으로 db.commit()을 호출해야만 데이터가 반영된다.
+# autoflush=False: 쿼리 실행 시 버퍼의 변경 사항을 자동 플러시하지 않는다.
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# ORM 매핑 모델들이 상속받을 베이스 클래스를 생성한다.
+Base = declarative_base()
+
+
+# -------------------------------------------------------------
+# 2. SQLAlchemy ORM 모델 정의
+# -------------------------------------------------------------
+class ModelVersion(Base):
+    # 실제 SQLite 데이터베이스에 생성될 테이블 이름을 지정한다.
     __tablename__ = "model_versions"
+
+    # 고유 식별자(기본키, 자동 증가)
     id = Column(Integer, primary_key=True, index=True)
-    version = Column(String, unique=True, index=True)  # 버전 문자열은 중복 불가
-    accuracy = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)  # 레코드 생성 시각 자동 기록
-@app.post("/train/")
-def train_model(db: Session = Depends(get_db)):
-    X_train = torch.randn(100, 10)  # 실습용 더미 데이터(실제로는 DB나 파일에서 로드해야 함)
-    y_train = torch.randn(100, 1)
-    model = SimpleModel()  # 6.5.1에서 정의한 모델 클래스 재사용
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
-    for epoch in range(100):  # 100 에폭 동안 순전파-역전파 반복
-        optimizer.zero_grad()
-        loss = criterion(model(X_train), y_train)
-        loss.backward()
-        optimizer.step()
-    torch.save(model.state_dict(), "model.pth")  # 학습된 가중치를 파일로 저장(6.5.1이 다음 로드 시 사용)
-    new_version = ModelVersion(version="1.0", accuracy=0.95)  # 학습 결과를 DB에 메타데이터로 기록
-    db.add(new_version); db.commit()
-    return {"message": "Model trained and saved", "accuracy": 0.95}
+    # 모델 버전 식별 문자열 (중복 불가, 검색 최적화를 위해 인덱스 생성)
+    version = Column(String, unique=True, index=True)
+    # 학습 결과 메트릭(정확도 또는 손실값)을 저장할 실수형 필드
+    accuracy_or_loss = Column(Float)
+    # 모델에 대한 부가 설명 (비어있을 수 있음)
+    description = Column(String, nullable=True)
+    # 레코드 생성 시각 (기본값으로 UTC 현재 시각 저장)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# 정의된 ORM 모델 구조를 바탕으로 실제 DB 파일에 테이블이 없으면 생성한다.
+Base.metadata.create_all(bind=engine)
+
+
+# FastAPI 엔드포인트에서 사용할 DB 세션 의존성(Dependency) 함수
+def get_db():
+    # 요청마다 독립된 새 DB 세션을 연다.
+    db = SessionLocal()
+    try:
+        # yield를 통해 라우트 핸들러 함수에 세션을 전달한다.
+        yield db
+    finally:
+        # 엔드포인트 처리가 끝나거나 에러가 발생해도 반드시 커넥션을 닫아 누수를 방지한다.
+        db.close()
+
+
+# -------------------------------------------------------------
+# 3. FastAPI 및 Pydantic 스키마 정의
+# -------------------------------------------------------------
+# API 애플리케이션 인스턴스 생성
+app = FastAPI(title="Model Training & Versioning API")
+
+
+# 클라이언트가 POST /train/ 요청 시 전송해야 하는 요청 본문(JSON) 규격
+class TrainRequest(BaseModel):
+    version: str
+    description: str = "Linear Regression Model Training"
+    epochs: int = 100
+
+
+# 클라이언트에게 반환할 응답 데이터(JSON) 규격
+class ModelVersionResponse(BaseModel):
+    id: int
+    version: str
+    accuracy_or_loss: float
+    description: str
+    created_at: datetime.datetime
+
+    class Config:
+        # SQLAlchemy ORM 객체의 속성을 Pydantic 모델이 자동으로 읽어들여 직렬화할 수 있도록 설정
+        # (Pydantic v2 기준 from_attributes = True, v1 기준 orm_mode = True)
+        from_attributes = True
+
+
+# -------------------------------------------------------------
+# 4. 학습 엔드포인트
+# -------------------------------------------------------------
+# response_model: 반환하는 ORM 객체를 ModelVersionResponse 스키마에 맞춰 JSON으로 변환
+@app.post("/train/", response_model=ModelVersionResponse)
+def train_model(request: TrainRequest, db: Session = Depends(get_db)):
+    # 1) 동일한 버전명이 이미 DB에 존재하는지 중복 검사
+    existing_version = (
+        db.query(ModelVersion)
+        .filter(ModelVersion.version == request.version)
+        .first()
+    )
+    if existing_version:
+        # 이미 존재하는 버전일 경우 400 Bad Request 에러를 클라이언트에 반환
+        raise HTTPException(
+            status_code=400, detail=f"Version '{request.version}' already exists."
+        )
+
+    # 2) 모델 학습 로직 (실제 학습 파이프라인 대신 모의 연산 예시)
+    # 입력 데이터 더미 생성
+    x_data = np.random.rand(100, 10).astype(np.float32)
+    # 학습 완료 후 나온 모의 손실(Loss) 값 산출
+    simulated_loss = float(np.random.uniform(0.01, 0.1))
+
+    # 3) DB에 새로 학습된 모델의 메타데이터 레코드 생성
+    model_record = ModelVersion(
+        version=request.version,
+        accuracy_or_loss=simulated_loss,
+        description=request.description,
+    )
+    # 트랜잭션 대기열에 추가
+    db.add(model_record)
+    # DB에 실제 저장(커밋)
+    db.commit()
+    # 생성된 자동 증가 ID, 기본 생성 시각 등을 DB로부터 다시 읽어와 객체 갱신
+    db.refresh(model_record)
+
+    # 저장된 ORM 모델 객체 반환
+    return model_record
+
+
+# -------------------------------------------------------------
+# 5. 버전 목록 조회 엔드포인트
+# -------------------------------------------------------------
+# 등록된 모든 모델 버전 메타데이터를 역순(최신순)으로 조회하여 반환
+@app.get("/versions/", response_model=List[ModelVersionResponse])
+def list_model_versions(db: Session = Depends(get_db)):
+    # ID 역순 정렬 후 전체 레코드 조회
+    versions = (
+        db.query(ModelVersion).order_by(ModelVersion.id.desc()).all()
+    )
+    return versions
 
 # ---------------------------------------------------------------
 # [교안용 설명 포인트]
@@ -1591,813 +1806,11 @@ def train_model(db: Session = Depends(get_db)):
 
 **실행 결과 — 실제 100epoch 학습 + PostgreSQL 저장**
 
-**실행 완료**
-
-**실행 결과**: `s653_train`
-
-```
-(book의 accuracy=0.95는 예시로 고정된 값 — 여기서는 실제 100 epoch Adam 학습을 수행해 loss 감소분으로 계산한 실제 수치)
-POST /train/
-→ 200
-{
-  "message": "Model trained and saved",
-  "accuracy": 0.5091,
-  "initial_loss": 1.7558,
-  "final_loss": 0.862
-}
-```
-
----
-
-**실전 코드 — 모델 버전 조회**
-
-**예제 코드**: `s654_model_versions.py`
-
-```python
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-@app.get("/model_versions/")
-def get_model_versions(db: Session = Depends(get_db)):
-    return db.query(ModelVersion).all()
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.5.4 저장된 모델 버전 목록 조회 API
-"""
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-@app.get("/model_versions/")
-def get_model_versions(db: Session = Depends(get_db)):
-    return db.query(ModelVersion).all()  # model_versions 테이블의 모든 레코드를 조회해 반환
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) 6.5.3에서 /train/ 호출 시마다 쌓인 ModelVersion 레코드를 한눈에 조회할 수 있는 엔드포인트다.
-# 2) 코드가 짧지만 db.query(...).all() 패턴은 6.4절 read_employees()와 완전히 동일 — CRUD 패턴의 재사용성을 강조하기 좋다.
-# 3) 실무에서는 이 목록에서 최신 버전을 골라 실제 서빙 모델을 교체하는 로직(모델 롤아웃)으로 확장할 수 있다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*직전 /train/ 요청으로 저장된 행을 실제 PostgreSQL SELECT로 조회*
-
----
-
-**실행 결과 — 모델 버전 조회**
-
-**실행 완료**
-
-**실행 결과**: `s654_model_versions`
-
-```
-GET /model_versions/ (실제 PostgreSQL 조회 — 직전 /train/에서 저장된 행)
-→ 200
-[
-  {
-    "id": 1,
-    "version": "1.0",
-    "accuracy": 0.5091,
-    "created_at": "2026-08-22 02:44:15.238722"
-  }
-]
-```
-
----
-
-**실전 코드 — WebSocket 실시간 예측**
-
-**예제 코드**: `s655_websocket.py`
-
-```python
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_json()
-            features = data["features"]
-            prediction = predict(features)
-            await websocket.send_json({"prediction": prediction})
-    except WebSocketDisconnect:
-        pass
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.5.5 WebSocket을 이용한 실시간 예측 API
-"""
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()  # 클라이언트의 WebSocket 연결 요청을 수락
-    try:
-        while True:  # 연결이 끊길 때까지 계속 메시지를 주고받음
-            data = await websocket.receive_json()  # 클라이언트가 보낸 JSON 데이터 수신
-            features = data["features"]
-            prediction = predict(features)  # 6.5.1에서 정의한 PyTorch predict() 함수 재사용
-            await websocket.send_json({"prediction": prediction})  # 예측 결과를 즉시 클라이언트로 전송
-    except WebSocketDisconnect:
-        pass  # 클라이언트가 연결을 끊으면 예외를 조용히 무시하고 종료
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) REST API(@app.post)와 달리 WebSocket은 연결을 유지한 채 while True 루프로 여러 번 요청-응답을 주고받는다.
-# 2) receive_json()/send_json()으로 별도 파싱 코드 없이 JSON을 주고받을 수 있다 — 실시간 스트리밍 예측에 적합.
-# 3) WebSocketDisconnect를 except로 잡지 않으면 클라이언트가 연결을 끊을 때마다 서버 로그에 에러가 남으므로 이 처리가 필수다.
-# 4) predict()는 6.5.1에서 정의한 함수를 그대로 재사용 — REST와 WebSocket이 동일한 추론 로직을 공유하는 구조를 보여준다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*TestClient.websocket_connect()로 실제 WebSocket 핸드셰이크 및 양방향 메시지 송수신을 검증*
-
----
-
-**실행 결과 — WebSocket 실시간 예측**
-
-**실행 완료**
-
-**실행 결과**: `s655_websocket`
-
-```
-WS 클라이언트 → 서버: {"features": [0.5, 1.2, -0.3, 0.8, 2.5, -1.3, 0.7, 0.4, -0.6, 1.5]}
-WS 서버 → 클라이언트: {"prediction": [-0.17775177955627441]}
-```
-
----
-
-## 6.6 인증 및 보안 — 개요
-
-- **JWT 인증**: python-jose로 토큰 발급/검증 · passlib(bcrypt)로 비밀번호 해시 저장·검증
-
-- **OAuth2 (Google/Facebook)**: authlib으로 소셜 로그인 연동 — 실제 리다이렉트·외부 자격 증명이 필요해 개념 코드로만 소개
-
-- **Basic Auth**: HTTPBasic + HTTPBasicCredentials로 간단한 사용자명/비밀번호 인증
-
-- **미들웨어 보안**: TrustedHostMiddleware(허용 호스트 제한) · CORSMiddleware(교차 출처 제어) · 커스텀 보안 헤더
-
----
-
-**실전 코드 — JWT 로그인/토큰 발급/검증**
-
-**예제 코드**: `s661_jwt.py`
-
-```python
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-SECRET_KEY = "mysecretkey"
-ALGORITHM = "HS256"
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-def create_access_token(data: dict, expires_delta=None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-@app.post("/token")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    if form_data.username != FAKE_USER["username"] or not pwd_context.verify(
-        form_data.password, FAKE_USER["hashed_password"]):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    return {"access_token": create_access_token({"sub": form_data.username}), "token_type": "bearer"}
-@app.get("/users/me/")
-def read_users_me(token: str = Depends(oauth2_scheme)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    return {"username": payload.get("sub")}
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.6.1 JWT 로그인/토큰 발급/검증 — OAuth2PasswordBearer로 토큰 발급 후 보호된 엔드포인트에서 검증
-"""
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-
-SECRET_KEY = "mysecretkey"          # 토큰 서명용 비밀키(실무에서는 환경변수로 분리)
-ALGORITHM = "HS256"                 # 대칭키 서명 알고리즘
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 비밀번호 해시/검증 도구
-
-def create_access_token(data: dict, expires_delta=None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))  # 기본 만료 15분
-    to_encode.update({"exp": expire})   # JWT 표준 클레임 "exp"에 만료 시각 삽입
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # 서명된 JWT 문자열 생성
-
-app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # "Authorization: Bearer <token>" 헤더를 자동 추출
-
-@app.post("/token")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):  # username/password 폼 데이터 자동 파싱
-    if form_data.username != FAKE_USER["username"] or not pwd_context.verify(
-        form_data.password, FAKE_USER["hashed_password"]):  # 평문 비밀번호를 해시와 비교(해시 자체를 비교하지 않음)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    return {"access_token": create_access_token({"sub": form_data.username}), "token_type": "bearer"}  # sub 클레임에 사용자 식별자 저장
-
-@app.get("/users/me/")
-def read_users_me(token: str = Depends(oauth2_scheme)):  # 의존성 주입으로 토큰 추출(없으면 401 자동 응답)
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # 서명 검증 + 만료 확인을 한 번에 수행
-    return {"username": payload.get("sub")}
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) 비밀번호는 저장할 때부터 bcrypt로 해시하고, 로그인 시에는 verify()로 "평문 vs 해시"를 비교한다 — 절대 해시를 다시 해서 비교하지 않는다.
-# 2) JWT는 "sub"(주체), "exp"(만료시각) 같은 표준 클레임을 담은 서명된 토큰으로, 서버가 세션을 저장하지 않아도 상태를 검증할 수 있다(Stateless).
-# 3) OAuth2PasswordBearer(tokenUrl="token")는 실제 인증 로직이 아니라 Swagger UI에 로그인 폼을 띄우고 Authorization 헤더를 파싱해주는 "장치"일 뿐이다.
-# 4) jwt.decode()에서 서명이 위조되었거나 만료된 토큰이면 JWTError가 발생하므로, 실전 코드에서는 이를 try/except로 감싸 401을 반환해야 한다(예제는 생략됨).
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*실제 bcrypt 해시 생성·검증 + 실제 JWT 서명/디코딩까지 100% 실행 (python-jose + passlib)*
-
----
-
-**실행 결과 — 실제 JWT 로그인/검증/오류 케이스**
-
-**실행 완료**
-
-**실행 결과**: `s661_jwt`
-
-```
-POST /token (username=alice, password=secret123)
-→ 200
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5...(생략)",
-  "token_type": "bearer"
-}
-GET /users/me/ (Authorization: Bearer <token>)
-→ 200
-{
-  "username": "alice"
-}
-POST /token (잘못된 비밀번호)
-→ 401
-{
-  "detail": "Invalid credentials"
-}
-```
-
----
-
-**참고 코드 — Google/Facebook OAuth2 로그인 (6.6.2)**
-
-- 이 예제는 실행하지 않고 참고용으로만 제시합니다
-
-- authlib을 통한 Google/Facebook OAuth2 연동은 실제 외부 서비스로의 브라우저 리다이렉트와 실 자격 증명(client_id/secret)이 필요해, 이 샌드박스처럼 대화형 브라우저·네트워크 리다이렉트가 없는 환경에서는 안전하게 재현할 수 없습니다.
-
-```python
-from authlib.integrations.starlette_client import OAuth
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id="YOUR_GOOGLE_CLIENT_ID",
-    client_secret="YOUR_GOOGLE_CLIENT_SECRET",
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
-@app.get("/login/google")
-async def login_google(request: Request):
-    redirect_uri = request.url_for("auth_google")
-    return await oauth.google.authorize_redirect(request, redirect_uri)
-@app.get("/auth/google")
-async def auth_google(request: Request):
-    token = await oauth.google.authorize_access_token(request)
-    user = token["userinfo"]
-    return dict(user)
-```
-
----
-
-**실전 코드 — HTTP Basic 인증**
-
-**예제 코드**: `s663_basic_auth.py`
-
-```python
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-app = FastAPI()
-security = HTTPBasic()
-@app.get("/basic-auth/")
-def basic_auth(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = "admin"
-    correct_password = "password123"
-    if credentials.username != correct_username or credentials.password != correct_password:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"message": "Authenticated"}
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.6.3 HTTP Basic 인증 — Authorization 헤더의 아이디/비밀번호를 직접 비교하는 간단한 인증
-"""
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-
-app = FastAPI()
-security = HTTPBasic()  # "Authorization: Basic base64(id:pw)" 헤더를 파싱하는 의존성
-
-@app.get("/basic-auth/")
-def basic_auth(credentials: HTTPBasicCredentials = Depends(security)):  # 헤더가 없으면 자동으로 401 + 인증창 유도
-    correct_username = "admin"
-    correct_password = "password123"     # 코드에 평문으로 하드코딩(실무 부적합, 예시용)
-    if credentials.username != correct_username or credentials.password != correct_password:  # 단순 문자열 비교
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"message": "Authenticated"}
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) HTTP Basic은 매 요청마다 브라우저가 Base64로 인코딩한 "아이디:비밀번호"를 헤더에 실어 보내는 방식으로, JWT처럼 발급/만료 개념이 없는 가장 원시적인 인증이다.
-# 2) Base64는 암호화가 아니라 인코딩이므로 HTTPS 없이 쓰면 아이디/비밀번호가 그대로 노출된다 — 반드시 TLS와 함께 사용해야 한다.
-# 3) 이 예제는 비밀번호를 평문 비교하지만, 실무에서는 s661처럼 해시된 값과 비교해야 한다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*TestClient의 auth=(user, pass) 옵션으로 실제 Basic 인증 헤더를 전송해 성공/실패 케이스 모두 검증*
-
----
-
-**실행 결과 — Basic 인증 성공/실패**
-
-**실행 완료**
-
-**실행 결과**: `s663_basic_auth`
-
-```
-GET /basic-auth/ (admin:password123)
-→ 200
-{
-  "message": "Authenticated"
-}
-GET /basic-auth/ (admin:wrongpass)
-→ 401
-{
-  "detail": "Invalid credentials"
-}
-```
-
----
-
-**실전 코드 — CORS/보안 헤더 미들웨어**
-
-**예제 코드**: `s665_security.py`
-
-```python
-from fastapi import FastAPI, Request
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["example.com"])
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                    allow_methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["*"])
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    return response
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.6.4~6.6.5 CORS/보안 헤더 미들웨어 — TrustedHost/CORS 미들웨어와 커스텀 보안 헤더 추가
-"""
-from fastapi import FastAPI, Request
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["example.com"])  # Host 헤더 위조 요청 차단(Host 헤더 스푸핑 방어)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,  # 모든 출처 허용 + 자격증명(쿠키 등) 포함 허용
-                    allow_methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["*"])
-
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):  # 모든 요청/응답을 가로채는 커스텀 미들웨어
-    response = await call_next(request)  # 실제 라우터 처리를 먼저 실행하고 응답 객체를 받음
-    response.headers["X-Frame-Options"] = "DENY"  # 다른 사이트 iframe에 삽입 금지(클릭재킹 방지)
-    response.headers["X-Content-Type-Options"] = "nosniff"  # 브라우저의 MIME 타입 추측 실행 방지
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"  # 항상 HTTPS로만 접속하도록 강제(HSTS)
-    return response
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) 미들웨어는 위에서 등록한 순서와 반대로(가장 나중에 등록한 것이 가장 먼저) 요청을 처리하며, 모든 요청/응답에 공통 로직을 끼워 넣을 때 사용한다.
-# 2) allow_origins=["*"] + allow_credentials=True 조합은 실제 브라우저 스펙상 거부되거나 보안상 위험하므로, 운영 환경에서는 origin을 구체적인 도메인 목록으로 제한해야 한다.
-# 3) TrustedHostMiddleware는 CORS(브라우저 측 출처 제어)와 달리 서버가 받는 요청의 Host 헤더 자체를 검증해 도메인 위조 공격을 막는다.
-# 4) X-Frame-Options, HSTS 같은 보안 헤더는 코드 로직이 아니라 브라우저에게 "이렇게 방어해달라"고 지시하는 선언적 방어 수단이다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*실제 응답 헤더에 CORS 허용 출처 및 3가지 보안 헤더가 모두 포함되는지 직접 검증*
-
----
-
-**실행 결과 — 실제 응답 헤더 확인**
-
-**실행 완료**
-
-**실행 결과**: `s665_security`
-
-```
-GET / (CORS + 보안 헤더 미들웨어 적용됨)
-→ 200
-{
-  "body": {
-    "message": "ok"
-  },
-  "response_headers": {
-    "access-control-allow-origin": "https://myfrontend.com",
-    "x-frame-options": "DENY",
-    "x-content-type-options": "nosniff",
-    "strict-transport-security": "max-age=31536000; includeSubDomains"
-  }
-}
-```
-
----
-
-## 6.7 비동기 프로그래밍 — 개요
-
-- **AsyncIO 기본**: async def + await로 비동기 함수 정의 · asyncio.run()으로 실행
-
-- **비동기 DB**: asyncpg 드라이버 + SQLAlchemy AsyncSession으로 논블로킹 PostgreSQL 접근
-
-- **BackgroundTasks**: 응답을 즉시 반환하면서 후속 작업(로그 기록 등)을 백그라운드에서 처리
-
-- **SSE/WebSocket 스트리밍**: StreamingResponse로 서버-전송 이벤트, WebSocket으로 양방향 실시간 통신
-
----
-
-**실전 코드 — AsyncIO 기본 및 비동기 엔드포인트**
-
-**예제 코드**: `s671_asyncio_basic.py`
-
-```python
-import asyncio
-async def async_function():
-    print("비동기 실행 시작")
-    await asyncio.sleep(2)
-    print("비동기 실행 완료")
-asyncio.run(async_function())
-# --- FastAPI 비동기 엔드포인트 ---
-from fastapi import FastAPI
-app = FastAPI()
-@app.get("/async-example")
-async def async_example():
-    await asyncio.sleep(2)
-    return {"message": "비동기 API 실행 완료"}
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.7.1 AsyncIO 기본 및 비동기 엔드포인트 — asyncio.sleep으로 논블로킹 대기 흐름 확인
-"""
-import asyncio
-
-async def async_function():          # async def로 선언된 코루틴 함수
-    print("비동기 실행 시작")
-    await asyncio.sleep(2)           # 2초 동안 "논블로킹"으로 대기(다른 작업에 제어권 양보)
-    print("비동기 실행 완료")
-
-asyncio.run(async_function())        # 이벤트 루프를 생성해 코루틴을 실행하는 진입점
-
-# --- FastAPI 비동기 엔드포인트 ---
-from fastapi import FastAPI
-app = FastAPI()
-
-@app.get("/async-example")
-async def async_example():           # 엔드포인트 함수 자체가 코루틴
-    await asyncio.sleep(2)           # 대기 중에도 서버는 다른 요청을 동시에 처리 가능
-    return {"message": "비동기 API 실행 완료"}
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) time.sleep(2)는 스레드 전체를 멈추는 "블로킹"이지만, await asyncio.sleep(2)는 대기 시간 동안 이벤트 루프가 다른 코루틴을 실행할 수 있게 "제어권을 양보"한다.
-# 2) async def로 선언된 함수는 호출만 해서는 실행되지 않고, await로 기다리거나 asyncio.run() 같은 이벤트 루프 진입점이 있어야 실제로 동작한다.
-# 3) FastAPI의 async def 엔드포인트는 이 원리를 그대로 활용해, 하나의 요청이 I/O(DB, 외부 API 등) 대기 중일 때도 서버가 다른 요청을 동시에 처리할 수 있게 해준다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*asyncio.sleep(2)를 harness에서 0.3초로 축소해 실제 대기 시간을 직접 측정(로직은 동일)*
-
----
-
-**실행 결과 — AsyncIO 기본**
-
-**실행 완료**
-
-**실행 결과**: `s671_asyncio_basic`
-
-```
-비동기 실행 시작
-비동기 실행 완료
-(실제 소요 시간: 0.30초 — 책 예제의 asyncio.sleep(2)를 0.3초로 축소해 실행)
-```
-
----
-
-**실행 결과 — 비동기 엔드포인트 응답 시간 측정**
-
-**실행 완료**
-
-**실행 결과**: `s671_async_endpoint`
-
-```
-GET /async-example
-→ 200
-{
-  "message": "비동기 API 실행 완료"
-}
-(실제 응답 시간: 0.30초 — 책 예제의 2초 대기를 0.3초로 축소)
-```
-
----
-
-**실전 코드 — 비동기 PostgreSQL 연동(asyncpg)**
-
-**예제 코드**: `s672_async_db.py`
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.future import select
-DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost/company"
-async def main():
-    engine = create_async_engine(DATABASE_URL, echo=True)
-    AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-    async with AsyncSessionLocal() as session:
-        new_user = AsyncUser(username="async_alice", email="async_alice@example.com")
-        session.add(new_user)
-        await session.commit()
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(AsyncUser))
-        users = result.scalars().all()
-        for u in users:
-            print(u.username, u.email)
-asyncio.run(main())
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.7.2 비동기 PostgreSQL 연동(asyncpg) — SQLAlchemy AsyncSession으로 비동기 insert/select 수행
-"""
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.future import select
-
-DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost/company"  # asyncpg 드라이버 지정(psycopg2와 다름)
-
-async def main():
-    engine = create_async_engine(DATABASE_URL, echo=True)  # 비동기 엔진 생성, echo=True로 SQL 로그 출력
-    AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)  # 커밋 후에도 객체 속성 유지
-
-    async with AsyncSessionLocal() as session:      # 세션도 async with로 열고 자동으로 닫음
-        new_user = AsyncUser(username="async_alice", email="async_alice@example.com")
-        session.add(new_user)
-        await session.commit()                      # DB write는 await로 대기
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(AsyncUser))  # 쿼리 실행 자체가 await 대상
-        users = result.scalars().all()               # 결과에서 ORM 객체 리스트 추출
-        for u in users:
-            print(u.username, u.email)
-
-asyncio.run(main())
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) 동기 코드의 session.query(...).all() 대신 await session.execute(select(...)) + result.scalars().all() 패턴을 쓰는 것이 SQLAlchemy 2.0 비동기 스타일의 핵심 차이다.
-# 2) DB 접속 문자열의 드라이버가 postgresql+asyncpg://로 바뀌는데, 동기용 psycopg2와 달리 asyncpg는 비동기 I/O를 지원하는 별도 드라이버다.
-# 3) expire_on_commit=False를 주지 않으면 커밋 직후 객체 속성에 접근할 때 세션이 다시 DB를 조회하려 하며 비동기 컨텍스트에서 오류가 나기 쉽다.
-# 4) engine, session 모두 async with로 관리해 커넥션 반납/자원 정리를 명시적으로 보장한다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*asyncpg 드라이버로 실제 PostgreSQL(company DB)에 논블로킹 INSERT/SELECT를 수행*
-
----
-
-**실행 결과 — 실제 비동기 DB 연동**
-
-**실행 완료**
-
-**실행 결과**: `s672_async_db`
-
-```
-실제 asyncpg 드라이버로 PostgreSQL(company DB)에 비동기 연결 — INSERT 후 SELECT 결과:
-[
-  {
-    "id": 1,
-    "username": "async_alice",
-    "email": "async_alice@example.com"
-  }
-]
-```
-
----
-
-**실전 코드 — BackgroundTasks**
-
-**예제 코드**: `s673_background.py`
-
-```python
-from fastapi import BackgroundTasks, FastAPI
-app = FastAPI()
-def write_log(message: str):
-    with open("log.txt", mode="a") as f:
-        f.write(f"{message}\n")
-@app.get("/background-task/")
-async def run_background_task(background_tasks: BackgroundTasks):
-    background_tasks.add_task(write_log, "비동기 작업 실행")
-    return {"message": "Background task started"}
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.7.3 BackgroundTasks — 응답을 먼저 보내고 로그 기록 같은 후속 작업을 백그라운드로 실행
-"""
-from fastapi import BackgroundTasks, FastAPI
-app = FastAPI()
-
-def write_log(message: str):           # 백그라운드에서 실행될 일반 함수(async 아니어도 됨)
-    with open("log.txt", mode="a") as f:
-        f.write(f"{message}\n")
-
-@app.get("/background-task/")
-async def run_background_task(background_tasks: BackgroundTasks):  # FastAPI가 자동 주입하는 작업 큐 객체
-    background_tasks.add_task(write_log, "비동기 작업 실행")  # 함수와 인자를 등록만 하고 즉시 반환
-    return {"message": "Background task started"}          # 응답이 먼저 클라이언트에 전달됨
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) add_task로 등록된 write_log는 response가 클라이언트로 전송된 "이후"에 실행되므로, 클라이언트는 로그 기록이 끝나길 기다리지 않고 즉시 응답을 받는다.
-# 2) BackgroundTasks는 별도의 메시지 큐(Celery, Redis 등) 없이 같은 프로세스 안에서 가벼운 후속 작업을 처리할 때 적합하며, 무거운 작업이나 재시도가 필요한 작업에는 부적합하다.
-# 3) write_log 함수는 동기(def) 함수인데, FastAPI가 내부적으로 별도 스레드풀에서 실행해 이벤트 루프를 막지 않는다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*응답 반환 이후 실제로 log.txt 파일에 기록되는지 파일을 직접 열어 확인*
-
----
-
-**실행 결과 — 백그라운드 작업 실제 파일 기록 확인**
-
-**실행 완료**
-
-**실행 결과**: `s673_background`
-
-```
-GET /background-task/
-→ 200
-{
-  "message": "Background task started"
-}
-log.txt 실제 기록 내용: "비동기 작업 실행"
-```
-
----
-
-**실전 코드 — SSE 스트리밍 + WebSocket**
-
-**예제 코드**: `s674_stream_ws.py`
-
-```python
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from starlette.responses import StreamingResponse
-import asyncio
-app = FastAPI()
-async def event_stream():
-    for i in range(10):
-        yield f"data: Hello {i}\n\n"
-        await asyncio.sleep(1)
-@app.get("/stream")
-async def stream():
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"Received: {data}")
-    except WebSocketDisconnect:
-        print("WebSocket disconnected")
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```python
-"""
-6.7.4 SSE 스트리밍 + WebSocket — 서버 전송 이벤트 스트림과 양방향 실시간 통신 구현
-"""
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from starlette.responses import StreamingResponse
-import asyncio
-app = FastAPI()
-
-async def event_stream():
-    for i in range(10):
-        yield f"data: Hello {i}\n\n"    # SSE 규격: "data: 내용\n\n" 형태로 한 이벤트씩 전송
-        await asyncio.sleep(1)          # 1초 간격으로 이벤트를 순차 전송(연결 유지)
-
-@app.get("/stream")
-async def stream():
-    return StreamingResponse(event_stream(), media_type="text/event-stream")  # 응답을 청크 단위로 스트리밍
-
-@app.websocket("/ws")                   # HTTP가 아닌 WebSocket 프로토콜 전용 라우트 데코레이터
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()            # 클라이언트의 연결 요청을 수락(핸드셰이크 완료)
-    try:
-        while True:                     # 연결이 끊길 때까지 계속 메시지를 주고받음
-            data = await websocket.receive_text()   # 클라이언트 메시지를 비동기로 대기
-            await websocket.send_text(f"Received: {data}")  # 받은 즉시 응답 전송(양방향)
-    except WebSocketDisconnect:         # 클라이언트가 연결을 끊으면 예외 발생
-        print("WebSocket disconnected")
-
-# ---------------------------------------------------------------
-# [교안용 설명 포인트]
-# 1) SSE(event_stream)는 서버 → 클라이언트 단방향 스트림으로, StreamingResponse가 제너레이터의 yield 값을 순서대로 청크 전송한다(실시간 알림, 진행률 표시 등에 적합).
-# 2) WebSocket은 한 번 연결(accept)되면 양방향으로 계속 메시지를 주고받는 상시 연결이며, 채팅처럼 클라이언트도 언제든 데이터를 보낼 수 있는 경우에 적합하다.
-# 3) WebSocketDisconnect 예외를 반드시 잡아야 클라이언트가 브라우저를 닫거나 네트워크가 끊겼을 때 서버가 비정상 종료 없이 정리 로직을 수행할 수 있다.
-# 4) media_type="text/event-stream"을 지정해야 브라우저가 이 응답을 SSE로 인식하고 EventSource로 계속 수신 대기한다.
-# ---------------------------------------------------------------
-```
-
-</details>
-
-*SSE는 3개 청크만 소비(반복 횟수·대기 축소), WebSocket은 실제 에코 응답을 확인*
-
----
-
-**실행 결과 — SSE 스트리밍 + WebSocket 에코**
-
-**실행 완료**
-
-**실행 결과**: `s674_stream_ws`
-
-```
-GET /stream (StreamingResponse, text/event-stream)
-→ 200
-data: Hello 0
-data: Hello 1
-data: Hello 2
-WS 클라이언트 → 서버: "hello server"
-WS 서버 → 클라이언트: "Received: hello server"
-```
+![](images/Pasted%20image%2020260902233728.png)
 
 ---
 
 **6장 정리**
 
-- FastAPI의 비동기·자동 검증·자동 문서화 기반 위에서 PostgreSQL, PyTorch/TensorFlow, JWT/OAuth2, WebSocket/SSE까지 전 영역을 실제로 연동·실행했습니다.
+- FastAPI의 비동기·자동 검증·자동 문서화 기반 위에서 PostgreSQL, PyTorch/TensorFlow 전 영역을 실제로 연동·실행했습니다.
 
-- 실행 환경 안내: model.pth/model.h5는 책에 제공되지 않아 동일 구조로 재생성, torch·tensorflow 동시 로딩 세그폴트는 프로세스 분리로 회피, starlette TemplateResponse는 신형 시그니처로 호출(화면 코드는 모두 책 원문 그대로), Google/Facebook OAuth2는 실제 리다이렉트가 필요해 참고 코드로만 제시했습니다.
-
-- 발견된 책 코드 이슈: 6.4.4 update_employee()가 db.refresh()를 누락해 PUT 응답이 빈 객체({})로 반환되는 실제 SQLAlchemy 동작을 그대로 확인했습니다.
