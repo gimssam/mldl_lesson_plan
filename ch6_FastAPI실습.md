@@ -4,8 +4,6 @@
 
 설치·기본 사용법 · 요청 처리/검증 · PostgreSQL 연동 · PyTorch/TensorFlow 통합 · 인증/보안 · 비동기
 
-*파이썬 인공지능 풀스택 · pp.306-332*
-
 ## 6.1 FastAPI란? — 특징과 설치
 
 - **정의**: Python 3.6+ 기반의 고성능 비동기 웹 프레임워크 — 타입 힌트를 이용한 자동 데이터 검증·API 문서화가 강점
@@ -28,9 +26,28 @@
 | 성능 | 매우 높음 | 보통 | 보통~낮음 |
 | 적합한 용도 | 고성능 API, 머신러닝 서빙 | 소규모 웹앱 | 풀스택 웹 서비스 |
 
-*책 원문의 프레임워크 비교표 — FastAPI의 비동기·자동검증·자동문서화 강점을 요약*
-
 ---
+## FastAPI 기본 환경 설정
+### FastAPI 설치 및 환경 설정
+#### Python 환경 확인
+```
+python --version
+```
+#### 가상 환경 생성
+```
+conda create -n fastapi_env
+conda activate fastapi_env
+
+```
+#### FastAPI 설치
+```
+pip install fastapi uvicorn
+```
+
+#### 설치확인
+```
+pip list | grep fastapi
+```
 
 **실전 코드 — 첫 FastAPI 앱**
 

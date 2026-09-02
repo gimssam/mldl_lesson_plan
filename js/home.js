@@ -33,8 +33,8 @@
   var LEADING_NUMBER_RE = /^(\d+\.\s+|[①②③④⑤⑥⑦⑧⑨⑩]\s*)/;
 
   // same hierarchical numbering as buildTocBar() in app.js: h2 gets a
-  // sequential 00, 01, ...; a h3 is numbered relative to the h2 before it
-  // ("03-1", "03-2", ...) so a section listed here matches the pill it
+  // sequential 01, 02, ...; a h3 is numbered relative to the h2 before it
+  // ("04-1", "04-2", ...) so a section listed here matches the pill it
   // opens to on the lesson page.
   function extractHeadings(mdText){
     var bodyMd = stripHero(mdText);
@@ -44,7 +44,7 @@
     container.innerHTML = cleanHtml;
 
     var headings = container.querySelectorAll("h2, h3");
-    var h2Index = -1, subIndex = 0;
+    var h2Index = 0, subIndex = 0;
     var items = [];
     headings.forEach(function(h, idx){
       var text = h.textContent;
@@ -57,7 +57,7 @@
         num = pad2(h2Index);
       } else {
         subIndex += 1;
-        var parent = h2Index < 0 ? 0 : h2Index;
+        var parent = h2Index < 1 ? 1 : h2Index;
         num = pad2(parent) + "-" + subIndex;
       }
       items.push({id: "sec-" + idx, level: isH2 ? 2 : 3, num: num, text: clean});
