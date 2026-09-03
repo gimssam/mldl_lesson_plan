@@ -2,33 +2,41 @@
 
 ## 7.1 PostgreSQL 개요 및 기본 시스템 명령
 
-- **PostgreSQL이란**: 1996년 첫 출시된 오픈소스 객체-관계형 DBMS(ORDBMS) — ACID 트랜잭션, JSON/JSONB/XML/HSTORE 지원, 파티셔닝·복제 기능
+## 7.1.1. PostgreSQL 소개
+The PostgreSQL Global Development Group에서 개발하는 오픈 소스 ORDBMS. 1996년에 첫 출시
+### (1) PostgreSQL이란?
+PostgreSQL(포스트그레스큐엘)은 오픈소스 객체-관계형 데이터베이스 관리 시스템(ORDBMS)으로, 확장성과 안정성이 뛰어나며 ACID(원자성, 일관성, 고립성, 지속성) 트랜잭션을 지원.
+> 특징
+> - 오픈소스이며 무료 
+> - ACID 트랜잭션 지원 
+> - JSON, JSONB, XML, HSTORE을 포함한 다양한 데이터 타입 지원 
+> - 확장 가능한 저장 프로시저(PL/pgSQL, Python, JavaScript 등) 
+> - 파티셔닝 및 샤딩 지원 - 복제 및 클러스터링 기능
 
-- **설치**: Linux: sudo apt install postgresql postgresql-contrib · Windows: 공식 설치 프로그램+pgAdmin · macOS: brew install postgresql
+### (2) PostgreSQL 설치
+#### Linux(Ubuntu)에서 설치
+```
+sudo apt update 
+sudo apt install postgresql postgresql-contrib
+```
+#### Windows에서 설치
+공식 다운로드 사이트(https://www.postgresql.org/download/)에서 설치 프로그램 다운로드 후 설치
+#### macOS에서 설치
+```
+brew install postgresql
+```
 
-- **구조 계층**: 클러스터(서버 인스턴스) → 데이터베이스 → 스키마 → 테이블 → 열/행
-
-- **서버 관리 명령**: initdb(클러스터 초기화) · pg_ctl start/stop/restart · systemctl start/stop/status postgresql · psql(터미널 접속)
-
-- **psql 기본 명령**: \l(DB 목록) · \c(DB 변경) · \d(테이블 목록) · \q(종료)
+## 7.1.2. 기본 개념 및 데이터베이스 구조
+### (1) PostgreSQL 데이터베이스 구조
+- 클러스터 (Cluster): PostgreSQL 인스턴스(서버) 내의 모든 데이터베이스를 포함하는 공간 
+- 데이터베이스 (Database): 하나의 클러스터 내에서 독립적인 데이터 저장 공간
+- 스키마 (Schema): 데이터베이스 내에서 테이블, 뷰, 인덱스 등을 그룹화하는 개념
+- 테이블 (Table): 실제 데이터를 저장하는 공간
+- 열(Column)과 행(Row): 테이블의 구조와 데이터
 
 ---
 
-**psql 기본 명령 요약**
-
-| 명령 | 기능 |
-|---|---|
-| initdb -D <dir> | 데이터베이스 클러스터 초기화 |
-| pg_ctl -D <dir> start/stop/restart | 서버 시작/중지/재시작 |
-| sudo systemctl start/stop/restart/status postgresql | 서비스 제어 |
-| sudo -u postgres psql | PostgreSQL 터미널 접속 |
-| \l  \c mydb  \d  \q | DB 목록 / 변경 / 테이블 목록 / 종료 |
-
-*서버·서비스 관리 명령은 이 컨테이너의 실행 중인 서버를 중단시킬 수 있어 실행하지 않고 참고용으로만 제시 — 이하 DB/ROLE/백업 명령부터는 실제 실행*
-
----
-
-**구조 예시 — 스키마·테이블 생성 (7.1.2)**
+### **구조 예시 — 스키마·테이블 생성**
 
 **예제 코드**: `s712_structure`
 
@@ -66,15 +74,7 @@ CREATE TABLE sales.orders (                     -- sales 스키마 안에 orders
 
 </details>
 
-*실제 이 샌드박스의 PostgreSQL 16 서버에 mydb 생성 후 sales 스키마·테이블까지 실제 생성*
-
----
-
-**실행 결과 — 구조 예시 — 스키마·테이블 생성 (7.1.2)**
-
-**실행 완료**
-
-**실행 결과**: `s712_structure`
+#### **실행 결과 — 구조 예시 — 스키마·테이블 생성
 
 ```sql
 > CREATE SCHEMA IF NOT EXISTS sales ...  (rowcount=-1)
@@ -84,11 +84,11 @@ schema_name
 -----------
 sales
 (1행)
-```
-
 ---
 
-**데이터베이스 생성 및 삭제 (7.1.4)**
+
+```
+### **데이터베이스 생성 및 삭제**
 
 **예제 코드**: `s714_create_drop_db`
 
@@ -97,6 +97,9 @@ CREATE DATABASE mydatabase;
 -- 또는 터미널에서: createdb mydatabase
 DROP DATABASE mydatabase;
 -- 또는 터미널에서: dropdb mydatabase
+---
+
+
 ```
 
 <details>
@@ -119,14 +122,15 @@ DROP DATABASE mydatabase;                       -- mydatabase를 완전히 삭�
 </details>
 
 *실제 CREATE DATABASE 후 존재 확인, DROP DATABASE 후 삭제 확인까지 실제 실행*
+### **실행 결과 — 데이터베이스 생성 및 삭제**
+
+```sql
+CREATE DATABASE mydatabase2; 이후 조회 → [('mydatabase2',)]
+DROP DATABASE mydatabase2; 이후 조회 → (0 rows, 삭제 확인)
 
 ---
 
-**실행 결과 — 데이터베이스 생성 및 삭제 (7.1.4)**
-
-**실행 완료**
-
-**실행 결과**: `s714_create_drop_db`
+### **실행 결과 — 데이터베이스 생성 및 삭제 (7.1.4)**
 
 ```sql
 CREATE DATABASE mydatabase2; 이후 조회 → [('mydatabase2',)]
@@ -135,7 +139,7 @@ DROP DATABASE mydatabase2; 이후 조회 → (0 rows, 삭제 확인)
 
 ---
 
-**사용자 및 권한 관리 (7.1.5)**
+### **사용자 및 권한 관리**
 
 **예제 코드**: `s715_role`
 
@@ -166,23 +170,19 @@ DROP ROLE myuser;                                                -- myuser 롤(�
 </details>
 
 *CREATE ROLE로 로그인 가능 계정 생성 → 권한 부여 → 철회 → DROP ROLE까지 전 과정 실제 실행*
-
----
-
-**실행 결과 — 사용자 및 권한 관리 (7.1.5)**
-
-**실행 완료**
-
-**실행 결과**: `s715_role`
+#### **실행 결과 — 사용자 및 권한 관리**
 
 ```
 CREATE ROLE myuser ... 이후 조회 → [('myuser', True)]
 REVOKE + DROP ROLE myuser 이후 조회 → (0 rows, 삭제 확인)
+---
+
+
 ```
 
 ---
 
-**백업 및 복구 (7.1.6)**
+### **백업 및 복구**
 
 **예제 코드**: `s716_backup_restore`
 
@@ -215,19 +215,15 @@ psql -U postgres -d mydatabase -f backup.sql                    # plain SQL 백�
 </details>
 
 *실제 pg_dump로 mydb를 백업 파일로 만든 뒤, 새 DB(mydb_restore)에 pg_restore로 복구해 테이블 존재까지 확인*
-
----
-
-**실행 결과 — 백업 및 복구 (7.1.6)**
-
-**실행 완료**
-
-**실행 결과**: `s716_backup_restore`
+#### **실행 결과 — 백업 및 복구**
 
 ```
 pg_dump -F c 실행 → backup.dump 생성 (30360 bytes)
 pg_restore -c 실행 (returncode=1) → mydb_restore에 복구
 복구된 sales 스키마 테이블 확인: [('orders',), ('order_items',)]
+---
+
+
 ```
 
 ---
@@ -246,24 +242,24 @@ pg_restore -c 실행 (returncode=1) → mydb_restore에 복구
 
 ---
 
-**주요 데이터 타입**
+### **주요 데이터 타입**
 
-| 데이터 타입 | 설명 |
-|---|---|
-| INTEGER | 정수 (4바이트) |
-| BIGINT | 큰 정수 (8바이트) |
-| NUMERIC | 고정 소수점 숫자 |
-| TEXT | 가변 길이 문자열 |
-| VARCHAR(n) | 최대 n 길이의 문자열 |
-| BOOLEAN | TRUE 또는 FALSE |
-| DATE | 날짜 (YYYY-MM-DD) |
-| TIMESTAMP | 날짜 및 시간 |
+| 데이터 타입     | 설명              |
+| ---------- | --------------- |
+| INTEGER    | 정수 (4바이트)       |
+| BIGINT     | 큰 정수 (8바이트)     |
+| NUMERIC    | 고정 소수점 숫자       |
+| TEXT       | 가변 길이 문자열       |
+| VARCHAR(n) | 최대 n 길이의 문자열    |
+| BOOLEAN    | TRUE 또는 FALSE   |
+| DATE       | 날짜 (YYYY-MM-DD) |
+| TIMESTAMP  | 날짜 및 시간         |
 
 ---
 
-**테이블 생성 — 제약 조건 4종 (7.2.1~7.2.2)**
+### **테이블 생성 — 제약 조건 4종 **
 
-**예제 코드**: `s722_table`
+#### **예제 코드**: `s722_table`
 
 ```sql
 CREATE TABLE sales.orders (
@@ -297,14 +293,7 @@ CREATE TABLE sales.orders (                                    -- sales 스키�
 </details>
 
 *SERIAL·PRIMARY KEY·NOT NULL·DEFAULT·CHECK 5가지 제약을 한 테이블에서 실제 생성*
-
----
-
-**실행 결과 — 테이블 생성 — 제약 조건 4종 (7.2.1~7.2.2)**
-
-**실행 완료**
-
-**실행 결과**: `s722_table`
+#### **실행 결과 — 테이블 생성**
 
 ```sql
 > DROP TABLE IF EXISTS sales.orders CASCADE ...  (rowcount=-1)
@@ -317,11 +306,14 @@ customer_name | text
 order_date | timestamp without time zone
 total_price | numeric
 (4행)
+---
+
+
 ```
 
 ---
 
-**외래 키(FOREIGN KEY) (7.2.2)**
+### **외래 키(FOREIGN KEY)**
 
 **예제 코드**: `s723_fk_unique`
 
@@ -354,14 +346,7 @@ CREATE TABLE sales.order_items (                                          -- 주
 </details>
 
 *REFERENCES + ON DELETE CASCADE로 부모-자식 관계 설정 — pg_constraint에서 실제 제약 종류 확인*
-
----
-
-**실행 결과 — 외래 키(FOREIGN KEY) (7.2.2)**
-
-**실행 완료**
-
-**실행 결과**: `s723_fk_unique`
+#### **실행 결과 — 외래 키(FOREIGN KEY)**
 
 ```sql
 > DROP TABLE IF EXISTS sales.order_items ...  (rowcount=-1)
@@ -372,11 +357,14 @@ conname | contype
 order_items_pkey | p
 order_items_order_id_fkey | f
 (2행)
+---
+
+
 ```
 
 ---
 
-**CHECK 제약 위반 테스트**
+### **CHECK 제약 위반 테스트**
 
 **예제 코드**: `s723_check_default`
 
@@ -406,24 +394,16 @@ VALUES ('제약조건테스트', -10);                                          
 </details>
 
 *0 미만 값 삽입 시 실제 CheckViolation 예외가 발생하는지 직접 검증*
-
----
-
-**실행 결과 — CHECK 제약이 실제로 위반을 차단함**
-
-**실행 완료**
-
-**실행 결과**: `s723_check_default`
+#### **실행 결과 — CHECK 제약이 실제로 위반을 차단함**
 
 ```
 CHECK(total_price >= 0) 위반 → 실제 오류 발생(정상 동작 확인)
 CheckViolation: new row for relation "orders" violates check constraint "orders_total_price_check"
 DETAIL:  Failing row contains (1, 제약조건테스트, 2026-08-22 02:54:01.283898, -10.00).
 ```
-
 ---
 
-**인덱스 생성 (7.2.3)**
+### **인덱스 생성 (7.2.3)**
 
 **예제 코드**: `s7231_index`
 
@@ -451,11 +431,7 @@ CREATE INDEX idx_customer_name ON sales.orders(customer_name);  -- customer_name
 
 ---
 
-**실행 결과 — 인덱스 생성 (7.2.3)**
-
-**실행 완료**
-
-**실행 결과**: `s7231_index`
+**실행 결과 — 인덱스 생성**
 
 ```sql
 > CREATE INDEX IF NOT EXISTS idx_customer_name ON sales.orders(customer_name) ...  (rowcount=-1)
@@ -466,105 +442,13 @@ orders_pkey
 idx_customer_name
 (2행)
 ```
-
----
-
-**GIN 인덱스 (7.2.3)**
-
-**예제 코드**: `s7232_gin`
-
-```sql
-CREATE INDEX idx_product_name ON sales.order_items USING GIN(product_name);
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-CREATE INDEX idx_product_name ON sales.order_items USING GIN(product_name);  -- product_name 컬럼에 GIN(Generalized Inverted Index) 인덱스 생성
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) GIN은 배열, JSONB, 전문 검색(tsvector) 등 "여러 값을 포함하는" 데이터에 최적화된 인덱스로, 일반 TEXT 컬럼에는 바로 적용되지 않는다.
--- 2) 실제 PostgreSQL 환경에서는 pg_trgm 확장을 CREATE EXTENSION IF NOT EXISTS pg_trgm으로 먼저 설치하고, 연산자 클래스 gin_trgm_ops를 지정해야 한다.
--- 3) 따라서 실행 시 실제 구문은 CREATE INDEX idx_product_name ON sales.order_items USING gin (product_name gin_trgm_ops); 로 대체되어 수행됨을 함께 안내한다.
--- 4) gin_trgm_ops를 적용하면 LIKE '%키워드%' 같은 부분 문자열 검색(트라이그램 기반 유사도 검색)의 성능이 크게 향상된다.
--- ---------------------------------------------------------------
-```
-
 </details>
 
 *text 컬럼에 GIN을 걸려면 pg_trgm 확장이 필요 — harness에서 CREATE EXTENSION pg_trgm 후 gin_trgm_ops 연산자 클래스로 생성(책 코드와 동일한 목적, 실제 PostgreSQL 요구사항 반영)*
 
 ---
 
-**실행 결과 — GIN 인덱스 (7.2.3)**
-
-**실행 완료**
-
-**실행 결과**: `s7232_gin`
-
-```sql
-> CREATE EXTENSION IF NOT EXISTS pg_trgm ...  (rowcount=-1)
-> DROP INDEX IF EXISTS idx_product_name ...  (rowcount=-1)
-> CREATE INDEX idx_product_name ON sales.order_items USING GIN(product_name gin_trgm_ops) ...  (rowcount=-1)
-> SELECT indexname, indexdef FROM pg_indexes WHERE indexname='idx_product_name' ...
-indexname | indexdef
---------------------
-idx_product_name | CREATE INDEX idx_product_name ON sales.order_items USING gin (product_name gin_trgm_ops)
-(1행)
-```
-
----
-
-**BRIN 인덱스 (7.2.3)**
-
-**예제 코드**: `s7233_brin`
-
-```sql
-CREATE INDEX idx_order_date ON sales.orders USING BRIN(order_date);
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-CREATE INDEX idx_order_date ON sales.orders USING BRIN(order_date);  -- order_date 컬럼에 BRIN(Block Range Index) 인덱스 생성
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) BRIN은 데이터가 물리적으로 정렬·군집된 대용량 테이블(예: 시간순으로 쌓이는 주문 로그)에 적합한 인덱스로, B-tree보다 저장 공간이 훨씬 작다.
--- 2) 값 범위별로 블록 단위 최소/최대값만 저장하므로 order_date처럼 시간이 흐를수록 증가하는 컬럼과 궁합이 좋다.
--- 3) 다만 데이터가 정렬되어 있지 않으면(랜덤 삽입 등) 검색 효율이 크게 떨어지므로 사용 전 데이터 특성을 반드시 확인해야 한다.
--- 4) pg_indexes에서 indexdef를 조회하면 idx_order_date가 USING brin으로 생성된 것을 확인할 수 있다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*대용량 시계열 데이터에 적합한 BRIN 인덱스를 order_date 컬럼에 실제 생성*
-
----
-
-**실행 결과 — BRIN 인덱스 (7.2.3)**
-
-**실행 완료**
-
-**실행 결과**: `s7233_brin`
-
-```sql
-> DROP INDEX IF EXISTS idx_order_date ...  (rowcount=-1)
-> CREATE INDEX idx_order_date ON sales.orders USING BRIN(order_date) ...  (rowcount=-1)
-> SELECT indexname, indexdef FROM pg_indexes WHERE indexname='idx_order_date' ...
-indexname | indexdef
---------------------
-idx_order_date | CREATE INDEX idx_order_date ON sales.orders USING brin (order_date)
-(1행)
-```
-
----
-
-**뷰(VIEW) 생성 (7.2.4)**
+### **뷰(VIEW) 생성**
 
 **예제 코드**: `s724_view`
 
@@ -597,13 +481,7 @@ WHERE total_price > 100;                    -- 뷰 정의에 포함된 필터 �
 
 *더미 주문 5건을 삽입한 뒤, 100 초과 조건의 뷰를 실제 조회*
 
----
-
-**실행 결과 — 뷰(VIEW) 생성 (7.2.4)**
-
-**실행 완료**
-
-**실행 결과**: `s724_view`
+**실행 결과 — 뷰(VIEW) 생성 **
 
 ```sql
 > DROP VIEW IF EXISTS customer_orders ...  (rowcount=-1)
@@ -616,70 +494,14 @@ customer_name | total_price
 이영희 | 320.75
 강호동 | 620.00
 (4행)
+---
+
+
 ```
 
 ---
 
-**머터리얼라이즈드 뷰 (7.2.4)**
-
-**예제 코드**: `s724_matview`
-
-```sql
-CREATE MATERIALIZED VIEW high_value_orders AS
-SELECT * FROM sales.orders WHERE total_price > 500;
--- 갱신이 필요할 때
-REFRESH MATERIALIZED VIEW high_value_orders;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.2.4 머터리얼라이즈드 뷰 — 쿼리 결과를 실제로 디스크에 저장해두고 필요할 때만 갱신하는 뷰
-CREATE MATERIALIZED VIEW high_value_orders AS   -- 일반 VIEW와 달리 SELECT 결과를 물리적으로 저장(조회 시 재계산 없이 저장된 값을 바로 반환)
-SELECT * FROM sales.orders WHERE total_price > 500;  -- 생성 시점 기준으로 500 초과 주문만 스냅샷으로 캡처
--- 갱신이 필요할 때
-REFRESH MATERIALIZED VIEW high_value_orders;    -- 저장된 스냅샷을 원본 테이블 최신 상태로 다시 계산해 덮어씀(자동 갱신 아님, 수동 호출 필요)
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) 일반 VIEW는 조회할 때마다 원본을 다시 스캔하지만, MATERIALIZED VIEW는 CREATE 시점의 결과를 저장해두므로 조회는 빠르지만 원본이 바뀌어도 자동으로 반영되지 않는다.
--- 2) 이 예제에서는 강호동(620.00) 1건만 500 초과 조건을 만족해 처음 조회 시 1행이 나오고, REFRESH를 실행해도 원본 sales.orders 데이터 자체가 변경되지 않았으므로 결과는 동일하게 1행 유지된다 — REFRESH는 "재계산"이지 "새 데이터 생성"이 아님을 보여주는 포인트.
--- 3) REFRESH MATERIALIZED VIEW는 기본적으로 전체 데이터를 잠그고 재계산한다(동시 조회를 막음) — 운영 환경에서는 CONCURRENTLY 옵션과 고유 인덱스가 필요하다는 점을 언급하면 좋다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*실제로 결과가 미리 저장되는 것과 REFRESH로 갱신되는 것을 두 차례 조회로 확인*
-
----
-
-**실행 결과 — 머터리얼라이즈드 뷰 (7.2.4)**
-
-**실행 완료**
-
-**실행 결과**: `s724_matview`
-
-```sql
-> DROP MATERIALIZED VIEW IF EXISTS high_value_orders ...  (rowcount=-1)
-> CREATE MATERIALIZED VIEW high_value_orders AS ...  (rowcount=1)
-> SELECT customer_name, total_price FROM high_value_orders ...
-customer_name | total_price
----------------------------
-강호동 | 620.00
-(1행)
-> REFRESH MATERIALIZED VIEW high_value_orders ...  (rowcount=-1)
-> SELECT customer_name, total_price FROM high_value_orders ...
-customer_name | total_price
----------------------------
-강호동 | 620.00
-(1행)
-```
-
----
-
-**테이블 변경(ALTER TABLE) (7.2.5)**
+### **테이블 변경(ALTER TABLE)**
 
 **예제 코드**: `s725_alter`
 
@@ -709,14 +531,7 @@ ALTER TABLE sales.orders DROP COLUMN status;  -- (order_status로 이미 변경�
 </details>
 
 *컬럼 추가 → 이름 변경 → 삭제까지 information_schema.columns로 매 단계 실제 확인*
-
----
-
-**실행 결과 — 테이블 변경(ALTER TABLE) (7.2.5)**
-
-**실행 완료**
-
-**실행 결과**: `s725_alter`
+#### **실행 결과 — 테이블 변경(ALTER TABLE)**
 
 ```sql
 > ALTER TABLE sales.orders ADD COLUMN status TEXT DEFAULT 'pending' ...  (rowcount=-1)
@@ -735,10 +550,9 @@ order_status
 > SELECT column_name FROM information_schema.columns WHERE table_schema='sales' AND table_name='orders' AND column_name IN ('status','order_status') ...
 (0 rows)
 ```
-
 ---
 
-**테이블 이름 변경 및 삭제 (7.2.5)**
+### **테이블 이름 변경 및 삭제**
 
 **예제 코드**: `s725_rename_table_drop`
 
@@ -771,11 +585,7 @@ DROP TABLE sales.demo_drop;                          -- demo_drop 테이블을 �
 
 ---
 
-**실행 결과 — 테이블 이름 변경 및 삭제 (7.2.5)**
-
-**실행 완료**
-
-**실행 결과**: `s725_rename_table_drop`
+#### **실행 결과 — 테이블 이름 변경 및 삭제**
 
 ```sql
 > ALTER TABLE sales.order_items RENAME TO order_items_renamed ...  (rowcount=-1)
@@ -795,113 +605,6 @@ orders
 
 ---
 
-**파티셔닝 (7.2.6, 책 원문의 실제 버그)**
-
-**예제 코드**: `s726_partition`
-
-```sql
-CREATE TABLE orders (
-    order_id SERIAL PRIMARY KEY,
-    order_date DATE NOT NULL
-) PARTITION BY RANGE (order_date);
-CREATE TABLE orders_2023 PARTITION OF orders
-    FOR VALUES FROM ('2023-01-01') TO ('2023-12-31');
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.2.6 파티셔닝 — order_date 기준 RANGE 파티션 테이블 생성(책 원문 코드, 실제로는 PostgreSQL이 거부함)
-CREATE TABLE orders (
-    order_id SERIAL PRIMARY KEY,               -- order_id에 PRIMARY KEY 제약을 지정(파티션 키인 order_date는 포함하지 않음)
-    order_date DATE NOT NULL                   -- 파티션 기준이 될 컬럼(NOT NULL 필수 — 파티션 경계 판단에 NULL 불가)
-) PARTITION BY RANGE (order_date);             -- order_date 값 범위에 따라 자식 파티션으로 나누겠다고 선언
-CREATE TABLE orders_2023 PARTITION OF orders   -- orders의 자식 파티션 테이블 생성
-    FOR VALUES FROM ('2023-01-01') TO ('2023-12-31');  -- 2023-01-01(포함) ~ 2023-12-31(미포함) 범위를 담당
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) [실제 오류] 이 코드를 그대로 실행하면 PostgreSQL이 CREATE TABLE 단계에서 즉시 거부한다: `ERROR: unique constraint on partitioned table must include all partitioning columns` (FeatureNotSupported). 원인은 order_id에 건 PRIMARY KEY(=내부적으로 UNIQUE 제약)가 파티션 키인 order_date를 포함하지 않기 때문이다 — PostgreSQL은 파티션 테이블의 PK/UNIQUE 제약이 반드시 파티션 키 컬럼을 포함하도록 강제한다(전체 파티션에 걸친 유일성 보장이 물리적으로 불가능하므로).
--- 2) [해결 방법 A] PRIMARY KEY를 order_id 단독이 아니라 (order_id, order_date) 복합키로 바꾸면 파티션 키가 포함되므로 그대로 동작한다: `order_id SERIAL, order_date DATE NOT NULL, PRIMARY KEY (order_id, order_date)`.
--- 3) [해결 방법 B, 책 원문 취지에 더 가까움] order_id에서 PRIMARY KEY 제약을 아예 빼고 SERIAL만 남기면(즉 `order_id SERIAL, order_date DATE NOT NULL`) CREATE TABLE ~ PARTITION BY RANGE와 CREATE TABLE ... PARTITION OF가 정상적으로 성공하며, INSERT 시 order_date 값에 따라 orders_2023 같은 올바른 자식 파티션으로 데이터가 자동 라우팅되는 것을 실제로 확인할 수 있다.
--- 4) 이 예제는 "책에 나온 코드라고 무조건 실행되는 것은 아니다"를 학생들에게 보여주는 실습 포인트다 — PostgreSQL 버전과 파티셔닝 제약을 모르면 겪게 되는 실전 오류이며, 오류 메시지를 읽고 원인(PK가 파티션 키 미포함)을 스스로 추론하는 훈련으로 다루면 좋다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*책 코드 그대로 실행하면 PostgreSQL이 실제로 거부 — 파티션 테이블의 PRIMARY KEY는 파티션 기준 컬럼을 반드시 포함해야 함*
-
----
-
-**실행 결과 — 파티션 키 미포함 PRIMARY KEY 오류 (책 자체의 버그)**
-
-**실행 완료**
-
-**실행 결과**: `s726_partition`
-
-```sql
-책의 코드를 그대로 실행 → 실제 오류 발생
-(파티션 테이블에서 PRIMARY KEY는 파티션 기준 컬럼(order_date)을 반드시 포함해야 하는데, order_id만 PRIMARY KEY로 지정되어 있어 PostgreSQL이 거부함 — 책 자체의 오류)
-FeatureNotSupported: unique constraint on partitioned table must include all partitioning columns
-DETAIL:  PRIMARY KEY constraint on table "orders" lacks column "order_date" which is part of the partition key.
-(PRIMARY KEY 제약을 제거하고 재실행하면 파티셔닝 자체는 정상 동작):
-> DROP TABLE IF EXISTS orders CASCADE ...  (rowcount=-1)
-> CREATE TABLE orders (order_id SERIAL, order_date DATE NOT NULL) PARTITION BY RANGE (order_date) ...  (rowcount=-1)
-> CREATE TABLE orders_2023 PARTITION OF orders FOR VALUES FROM ('2023-01-01') TO ('2023-12-31') ...  (rowcount=-1)
-> INSERT INTO orders (order_date) VALUES ('2023-05-01'),('2023-08-15') ...  (rowcount=2)
-> SELECT tableoid::regclass AS partition, order_date FROM orders ORDER BY order_date ...
-partition | order_date
-----------------------
-orders_2023 | 2023-05-01
-orders_2023 | 2023-08-15
-(2행)
-```
-
----
-
-**클러스터링(CLUSTER) (7.2.6, 실제 제약)**
-
-**예제 코드**: `s726_cluster`
-
-```
-CLUSTER sales.orders USING idx_order_date;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.2.6 클러스터링(CLUSTER) — 인덱스 순서대로 테이블 물리적 저장 순서를 재정렬(실제로는 실행 불가)
-CLUSTER sales.orders USING idx_order_date;   -- idx_order_date 인덱스 순서에 맞춰 sales.orders의 물리적 행 저장 순서를 재배치 시도
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) [실제 오류] 이 문장은 실행 즉시 예외를 던진다: `ERROR: cannot cluster on index "idx_order_date" because access method does not support clustering` (FeatureNotSupported). CLUSTER는 대상 인덱스가 "정렬 순서를 보장하는" 접근 방식(B-tree 등)일 때만 사용할 수 있다.
--- 2) idx_order_date는 7.2.3에서 BRIN(Block Range INdex)으로 생성된 인덱스다 — BRIN은 블록 단위 범위 요약 정보만 저장할 뿐 개별 행의 정렬 순서를 보장하지 않으므로, PostgreSQL이 클러스터링 기준으로 사용할 수 없다고 판단해 거부한다.
--- 3) 실제로 order_date 기준 CLUSTER를 실행하려면 같은 컬럼에 B-tree 인덱스(예: `CREATE INDEX idx_order_date_btree ON sales.orders USING btree (order_date);`)를 별도로 만든 뒤 그 인덱스로 CLUSTER해야 한다 — 인덱스 종류(BRIN vs B-tree)마다 지원하는 연산이 다르다는 점을 실제 오류로 체감시키는 예제.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*CLUSTER는 정렬을 보장하는 인덱스가 필요 — idx_order_date는 7.2.3에서 BRIN으로 생성되어 있어 실제로 실행 불가*
-
----
-
-**실행 결과 — BRIN 인덱스로는 CLUSTER 불가 (실제 PostgreSQL 제약)**
-
-**예외 발생**
-
-**실행 결과**: `s726_cluster`
-
-```
-FeatureNotSupported: cannot cluster on index "idx_order_date" because access method does not support clustering
-```
-
----
-
 ## 7.3 데이터 조작 언어(DML) — 개요
 
 - **INSERT / UPDATE / DELETE**: 행 삽입·수정·삭제 — WHERE 조건, 서브쿼리 활용 가능
@@ -914,7 +617,7 @@ FeatureNotSupported: cannot cluster on index "idx_order_date" because access met
 
 ---
 
-**기본 데이터 삽입 (7.3.1-1)**
+### **기본 데이터 삽입**
 
 **예제 코드**: `s731_insert1`
 
@@ -941,13 +644,7 @@ VALUES ('홍길동', '2025-02-01', 150.50);                            -- 각 �
 
 </details>
 
----
-
-**실행 결과 — 기본 데이터 삽입 (7.3.1-1)**
-
-**실행 완료**
-
-**실행 결과**: `s731_insert1`
+**실행 결과 — 기본 데이터 삽입**
 
 ```sql
 > DELETE FROM sales.order_items ...  (rowcount=0)
@@ -960,10 +657,9 @@ order_id | customer_name | order_date | total_price
 1 | 홍길동 | 2025-02-01 00:00:00 | 150.50
 (1행)
 ```
-
 ---
 
-**여러 행 삽입 (7.3.1-2)**
+### **여러 행 삽입 (7.3.1-2)**
 
 **예제 코드**: `s731_insert_multi`
 
@@ -996,13 +692,7 @@ VALUES
 
 *한 번의 INSERT 문으로 여러 행을 동시에 삽입*
 
----
-
-**실행 결과 — 여러 행 삽입 (7.3.1-2)**
-
-**실행 완료**
-
-**실행 결과**: `s731_insert_multi`
+#### **실행 결과 — 여러 행 삽입**
 
 ```sql
 > INSERT INTO sales.orders (customer_name, order_date, total_price) VALUES ...  (rowcount=2)
@@ -1014,10 +704,9 @@ order_id | customer_name | order_date | total_price
 3 | 이영희 | 2025-02-03 00:00:00 | 320.75
 (3행)
 ```
-
 ---
 
-**특정 컬럼만 삽입 (7.3.1-3)**
+### **특정 컬럼만 삽입**
 
 **예제 코드**: `s731_insert_partial`
 
@@ -1046,13 +735,7 @@ VALUES ('박서준', 99.99);                                -- customer_name, to
 
 *order_date는 DEFAULT(CURRENT_TIMESTAMP)가 자동 적용됨*
 
----
-
-**실행 결과 — 특정 컬럼만 삽입 (7.3.1-3)**
-
-**실행 완료**
-
-**실행 결과**: `s731_insert_partial`
+**실행 결과 — 특정 컬럼만 삽입**
 
 ```sql
 > INSERT INTO sales.orders (customer_name, total_price) VALUES ('박서준', 99.99) ...  (rowcount=1)
@@ -1062,53 +745,10 @@ order_id | customer_name | order_date | total_price
 4 | 박서준 | 2026-08-22 02:54:01.314192 | 99.99
 (1행)
 ```
-
 ---
 
-**DEFAULT VALUES (7.3.1-4, 책 원문의 실제 버그)**
 
-**예제 코드**: `s731_insert_default`
-
-```sql
-INSERT INTO sales.orders DEFAULT VALUES;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.3.1-4 DEFAULT VALUES — 모든 컬럼에 각자의 DEFAULT 값을 적용하려는 시도(실제로는 예외 발생)
-INSERT INTO sales.orders DEFAULT VALUES;  -- 컬럼 목록과 VALUES 값 없이, 모든 컬럼을 DEFAULT로 채우도록 지시
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) [책 원문의 실제 버그] 책은 "DEFAULT VALUES를 쓰면 모든 컬럼에 DEFAULT 값이 적용된다"고 설명하지만, 이는 "컬럼마다 DEFAULT 절이 정의되어 있을 때"만 성립하는 조건부 설명이며 이 문장이 누락되어 있다.
--- 2) customer_name 컬럼은 NOT NULL 제약이 걸려 있는데 DEFAULT 절이 없으므로, DEFAULT VALUES가 이 컬럼을 NULL로 채우려다 NotNullViolation 예외(null value in column "customer_name" ... violates not-null constraint)가 발생한다.
--- 3) order_date(DEFAULT CURRENT_TIMESTAMP), total_price(DEFAULT가 있다면) 등은 문제없이 채워지지만, customer_name 하나 때문에 문 전체가 실패하며 트랜잭션도 롤백된다.
--- 4) 해결 방법은 두 가지: ① INSERT INTO sales.orders (customer_name) VALUES ('값')처럼 NOT NULL 컬럼 값을 직접 명시하거나, ② 애초에 스키마에서 customer_name에 DEFAULT를 지정해 DEFAULT VALUES가 정상 동작하도록 설계를 바꾼다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*책은 "모든 컬럼에 DEFAULT 값이 적용된다"고 설명하지만, customer_name은 NOT NULL이면서 DEFAULT가 없어 실제로는 오류 발생 — 책 설명과 실제 스키마 제약이 어긋나는 지점*
-
----
-
-**실행 결과 — NOT NULL 위반 (책 설명과 실제 동작의 불일치)**
-
-**예외 발생**
-
-**실행 결과**: `s731_insert_default`
-
-```
-NotNullViolation: null value in column "customer_name" of relation "orders" violates not-null constraint
-DETAIL:  Failing row contains (5, null, 2026-08-22 02:54:01.314903, null).
-```
-
----
-
-**특정 행 수정 (7.3.2-1)**
+### **특정 행 수정**
 
 **예제 코드**: `s732_update_one`
 
@@ -1137,13 +777,7 @@ WHERE customer_name = '홍길동';                -- 이 조건에 맞는 행만
 
 </details>
 
----
-
-**실행 결과 — 특정 행 수정 (7.3.2-1)**
-
-**실행 완료**
-
-**실행 결과**: `s732_update_one`
+**실행 결과 — 특정 행 수정**
 
 ```sql
 > UPDATE sales.orders SET total_price = 180.00 WHERE customer_name = '홍길동' ...  (rowcount=1)
@@ -1154,9 +788,10 @@ customer_name | total_price
 (1행)
 ```
 
+
 ---
 
-**여러 컬럼 동시 수정 (7.3.2-2)**
+### **여러 컬럼 동시 수정**
 
 **예제 코드**: `s732_update_multi_col`
 
@@ -1185,13 +820,7 @@ WHERE customer_name = '김철수';                -- 이 조건에 맞는 행만
 
 </details>
 
----
-
-**실행 결과 — 여러 컬럼 동시 수정 (7.3.2-2)**
-
-**실행 완료**
-
-**실행 결과**: `s732_update_multi_col`
+#### **실행 결과 — 여러 컬럼 동시 수정**
 
 ```sql
 > UPDATE sales.orders SET total_price = 220.50, order_date = '2025-02-05' WHERE customer_name = '김철수' ...  (rowcount=1)
@@ -1201,10 +830,9 @@ customer_name | total_price | order_date
 김철수 | 220.50 | 2025-02-05 00:00:00
 (1행)
 ```
-
 ---
 
-**모든 행 수정 (7.3.2-3)**
+### **모든 행 수정**
 
 **예제 코드**: `s732_update_all`
 
@@ -1233,13 +861,7 @@ SET total_price = total_price * 1.1;  -- 10% 가격 상승          -- WHERE 없
 
 *WHERE 없이 전체 행 갱신 전/후 값을 나란히 비교*
 
----
-
-**실행 결과 — 모든 행 수정 (7.3.2-3)**
-
-**실행 완료**
-
-**실행 결과**: `s732_update_all`
+#### **실행 결과 — 모든 행 수정**
 
 ```sql
 > SELECT customer_name, total_price FROM sales.orders ORDER BY order_id ...
@@ -1263,7 +885,7 @@ customer_name | total_price
 
 ---
 
-**서브쿼리로 수정 (7.3.2-4)**
+### **서브쿼리로 수정**
 
 **예제 코드**: `s732_update_subquery`
 
@@ -1292,13 +914,7 @@ WHERE total_price < 100;                       -- 평균보다 훨씬 낮은(100
 
 </details>
 
----
-
-**실행 결과 — 서브쿼리로 수정 (7.3.2-4)**
-
-**실행 완료**
-
-**실행 결과**: `s732_update_subquery`
+#### **실행 결과 — 서브쿼리로 수정**
 
 ```sql
 > SELECT customer_name, total_price FROM sales.orders WHERE total_price < 100 ...
@@ -1316,7 +932,7 @@ customer_name | total_price
 
 ---
 
-**특정 행 삭제 (7.3.3-1)**
+### **특정 행 삭제**
 
 **예제 코드**: `s733_delete_one`
 
@@ -1343,13 +959,7 @@ WHERE customer_name = '홍길동';                -- 이 조건에 맞는 행만
 
 </details>
 
----
-
-**실행 결과 — 특정 행 삭제 (7.3.3-1)**
-
-**실행 완료**
-
-**실행 결과**: `s733_delete_one`
+#### **실행 결과 — 특정 행 삭제**
 
 ```sql
 > SELECT COUNT(*) FROM sales.orders WHERE customer_name='홍길동' ...
@@ -1364,10 +974,10 @@ count
 0
 (1행)
 ```
-
 ---
 
-**모든 행 삭제 (7.3.3-2)**
+
+### **모든 행 삭제**
 
 **예제 코드**: `s733_delete_all`
 
@@ -1394,13 +1004,8 @@ DELETE FROM sales.orders;                     -- WHERE 조건이 없으므로 or
 
 *실행 후 곧바로 SAVEPOINT로 되돌려 이후 실습용 데이터를 보존(harness 처리) — 책 예제 자체는 그대로 실행됨*
 
----
+#### **실행 결과 — 모든 행 삭제**
 
-**실행 결과 — 모든 행 삭제 (7.3.3-2)**
-
-**실행 완료**
-
-**실행 결과**: `s733_delete_all`
 
 ```
 DELETE 전 행 수: 3
@@ -1410,300 +1015,7 @@ DELETE FROM sales.orders; 실행 후 행 수: 0 (테이블 구조는 유지)
 
 ---
 
-**TRUNCATE (7.3.3-3, 실제 FK 제약 발견)**
-
-**예제 코드**: `s733_truncate`
-
-```sql
-TRUNCATE TABLE sales.orders;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.3.3-3 TRUNCATE로 테이블 전체 비우기 — 실제로는 FK 제약 때문에 단독 실행이 거부됨
-TRUNCATE TABLE sales.orders;                  -- 테이블을 통째로 비우는 명령이지만, order_items가 orders.order_id를 FK로 참조 중이라 실행이 거부됨
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) 실제 실행 결과: FeatureNotSupported 오류 발생 — "cannot truncate a table referenced in a foreign key constraint"(order_items가 orders를 참조하고 있기 때문).
--- 2) TRUNCATE는 DELETE와 달리 행 단위가 아니라 테이블 전체를 초기화하는 명령이라 FK로 참조되는 테이블에는 기본적으로 사용할 수 없다.
--- 3) 해결하려면 TRUNCATE TABLE sales.orders CASCADE; 처럼 CASCADE 옵션을 붙여 참조하는 테이블(order_items)까지 함께 비워야 한다(실제로 성공, 행 수 0으로 초기화).
--- 4) 책 예제는 이 FK 제약 상황을 고려하지 않은 코드이므로, 교안에서는 "왜 막히는지"와 "CASCADE로 해결하는 법"을 함께 짚어줘야 한다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*sales.order_items가 order_id를 FK로 참조 중이라 단독 TRUNCATE는 실제로 거부됨 — TRUNCATE ... CASCADE로 재시도하면 성공 (책이 고려하지 않은 제약)*
-
----
-
-**실행 결과 — FK 참조로 인한 TRUNCATE 거부 → CASCADE로 재시도**
-
-**실행 완료**
-
-**실행 결과**: `s733_truncate`
-
-```sql
-실행 전 행 수: 3
-TRUNCATE TABLE sales.orders; 단독 실행 → 실제 오류 발생
-(sales.order_items가 order_id를 FK로 참조 중이라 TRUNCATE 불가 — 책은 이 제약을 고려하지 않은 예제)
-FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
-DETAIL:  Table "order_items" references "orders".
-HINT:  Truncate table "order_items" at the same time, or use TRUNCATE ... CASCADE.
-TRUNCATE TABLE sales.orders CASCADE; 로 재시도 → 성공 (실행 후 행 수: 0)
-(주의: 이후 실습을 위해 harness에서 ROLLBACK TO SAVEPOINT로 데이터를 복원함)
-```
-
----
-
-**CASCADE를 활용한 삭제 (7.3.3-4, 책 원문의 숨은 함정)**
-
-**예제 코드**: `s733_delete_cascade`
-
-```
-DELETE FROM sales.orders CASCADE;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.3.3-4 CASCADE를 활용한 삭제(라고 책에 소개되었으나, 실제로는 함정이 있는 코드)
-DELETE FROM sales.orders CASCADE;             -- CASCADE는 DELETE 문법에 존재하지 않는 키워드지만, 오류 없이 실행됨(아래 설명 참고)
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) DELETE 문에는 원래 CASCADE 옵션이 없다(CASCADE는 TRUNCATE나 DROP, FK 제약 정의(ON DELETE CASCADE)에서 쓰이는 키워드이지 DELETE 문 자체의 옵션이 아니다).
--- 2) 그런데도 이 문장은 문법 오류 없이 성공한다 — PostgreSQL이 CASCADE를 예약어가 아니라 orders 테이블에 붙인 별칭(alias)으로 해석해버리기 때문이다. 즉 "DELETE FROM sales.orders AS CASCADE;"와 같은 의미가 된다.
--- 3) 실제로 EXPLAIN을 실행해보면 "Delete on orders cascade"라고 표시되어, cascade가 테이블 별칭으로 처리되었음을 확인할 수 있다.
--- 4) 결과적으로 이 문장은 'DELETE FROM sales.orders;'와 완전히 동일하게 동작한다 — 책이 의도한 "연관 데이터까지 함께 삭제"라는 CASCADE 기능은 전혀 작동하지 않는 조용한 함정이므로, 교안에서 반드시 짚어줘야 한다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*DELETE 문에는 원래 CASCADE 옵션이 없음 — 그런데도 실제로는 오류 없이 성공하는데, PostgreSQL이 CASCADE를 문법 오류가 아니라 orders 테이블의 별칭(alias)으로 해석해버리기 때문. 즉 이 문장은 실질적으로 그냥 'DELETE FROM sales.orders;'와 동일하게 동작 — 책이 의도한 '연관 데이터 함께 삭제'라는 CASCADE 기능은 전혀 작동하지 않는 조용한 함정*
-
----
-
-**실행 결과 — CASCADE는 실은 테이블 별칭일 뿐 (책 원문의 숨은 함정)**
-
-**실행 완료**
-
-**실행 결과**: `s733_delete_cascade`
-
-```
-→ 오류 없이 성공 (실행 계획 확인 결과)
-EXPLAIN 결과: "Delete on orders cascade"
-→ PostgreSQL이 CASCADE를 orders 테이블의 별칭(alias)으로 해석
-즉 이 문장은 실질적으로:
-DELETE FROM sales.orders;
-와 완전히 동일하게 동작 — CASCADE 키워드는 아무 기능도 수행하지 않음
-```
-
----
-
-**COPY FROM / COPY TO (7.3.4)**
-
-**예제 코드**: `s734_copy`
-
-```
-COPY sales.orders FROM '/var/lib/postgresql/orders.csv'
-    DELIMITER ',' CSV HEADER;
-COPY sales.orders TO '/var/lib/postgresql/orders_backup.csv'
-    DELIMITER ',' CSV HEADER;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
--- 7.3.4 COPY FROM / COPY TO — 파일과 테이블 사이에 데이터를 대량으로 주고받는 명령
-COPY sales.orders FROM '/var/lib/postgresql/orders.csv'   -- 서버 프로세스가 직접 이 경로의 파일을 읽어 orders 테이블에 삽입(클라이언트가 아니라 서버가 읽음)
-    DELIMITER ',' CSV HEADER;                              -- 구분자는 콤마, CSV 형식이며 첫 줄은 헤더이므로 데이터로 취급하지 않고 건너뜀
-COPY sales.orders TO '/var/lib/postgresql/orders_backup.csv'  -- orders 테이블의 전체 데이터를 서버가 이 경로에 파일로 씀(내보내기)
-    DELIMITER ',' CSV HEADER;                              -- 마찬가지로 콤마 구분 CSV, 첫 줄에 컬럼명을 헤더로 함께 기록
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) COPY는 클라이언트가 아니라 PostgreSQL 서버 프로세스가 직접 파일을 읽고 쓰는 명령이므로, 경로는 서버가 접근 가능한 디렉터리여야 한다(클라이언트 PC의 경로가 아님).
--- 2) 책의 경로(/var/lib/postgresql/...)는 서버 프로세스에 쓰기 권한이 없어 실습 환경에서는 접근 가능한 /tmp/pg_copy/ 경로로 대체해서 실행했다.
--- 3) 실제 실행 결과: COPY FROM으로 2건(최민수 410.00, 윤서연 275.30)이 삽입되었고, COPY TO로 orders 테이블 전체가 CSV 백업 파일로 생성되었다.
--- 4) HEADER 옵션은 CSV 형식(CSV 키워드)과 함께 사용해야 하며, FROM 시에는 첫 줄을 데이터로 읽지 않고, TO 시에는 첫 줄에 컬럼명을 자동으로 써준다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*서버가 실제로 파일을 읽고 쓸 수 있는 디렉터리(/tmp/pg_copy)에 실제 CSV를 만들어 COPY FROM/TO 모두 실제 실행 — 책의 경로는 서버 프로세스 쓰기 권한이 없어 harness에서 접근 가능한 경로로 대체*
-
----
-
-**실행 결과 — COPY FROM / COPY TO (7.3.4)**
-
-**실행 완료**
-
-**실행 결과**: `s734_copy`
-
-```sql
-> COPY sales.orders(customer_name, order_date, total_price) FROM '/tmp/pg_copy/orders.csv' DELIMITER ',' CSV HEADER ...  (rowcount=2)
-
-> SELECT customer_name, total_price FROM sales.orders WHERE customer_name IN ('최민수','윤서연') ...
-
-customer_name | total_price
----------------------------
-최민수 | 410.00
-윤서연 | 275.30
-(2행)
-
-COPY TO 'orders_backup.csv' 실행 완료 — 파일 미리보기:
-customer_name,order_date,total_price
-최민수,2025-03-01 00:00:00,410.00
-윤서연,2025-03-02 00:00:00,275.30
-```
-
----
-
-**RETURNING — INSERT (7.3.5-1)**
-
-**예제 코드**: `s735_returning_insert`
-
-```sql
-INSERT INTO sales.orders (customer_name, total_price)
-VALUES ('강호동', 250.75)
-RETURNING order_id, order_date;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-INSERT INTO sales.orders (customer_name, total_price)  -- orders 테이블에 신규 주문 1건 삽입
-VALUES ('강호동', 250.75)                                -- customer_name, total_price 값 지정 (order_id, order_date는 자동 생성)
-RETURNING order_id, order_date;                         -- INSERT 직후 서버가 채운 값(자동증가 PK, 타임스탬프)을 별도 SELECT 없이 즉시 반환
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) RETURNING은 INSERT/UPDATE/DELETE가 실제로 반영한 행(들)의 값을 그 자리에서 돌려받는 절이다.
--- 2) order_id, order_date처럼 DB가 자동 생성하는 값(SERIAL, DEFAULT now() 등)을 확인하려면 원래는 INSERT 후 별도 SELECT가 필요했지만, RETURNING으로 한 번의 왕복(round trip)에 끝낼 수 있다.
--- 3) 실행 결과: order_id=8, order_date(자동 생성된 타임스탬프)가 즉시 반환됨 — 애플리케이션 코드에서 방금 만든 리소스의 식별자를 바로 활용할 때 유용하다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
----
-
-**실행 결과 — RETURNING — INSERT (7.3.5-1)**
-
-**실행 완료**
-
-**실행 결과**: `s735_returning_insert`
-
-```sql
-> INSERT INTO sales.orders (customer_name, total_price) VALUES ('강호동', 250.75) RETURNING order_id, order_date ...
-order_id | order_date
----------------------
-8 | 2026-08-22 02:54:01.327436
-(1행)
-```
-
----
-
-**RETURNING — UPDATE (7.3.5-2)**
-
-**예제 코드**: `s735_returning_update`
-
-```sql
-UPDATE sales.orders
-SET total_price = total_price * 1.2
-WHERE customer_name = '이영희'
-RETURNING *;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-UPDATE sales.orders                    -- orders 테이블의 행을 수정하는 UPDATE 문
-SET total_price = total_price * 1.2    -- 기존 total_price에 1.2배(20% 인상)를 곱해 갱신
-WHERE customer_name = '이영희'          -- 고객명이 '이영희'인 행만 대상으로 함
-RETURNING *;                           -- 실제로 갱신된 행이 있다면 그 행의 모든 컬럼을 반환
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) RETURNING *는 UPDATE로 "실제 변경된" 행에 한해서만 값을 돌려준다 — WHERE 조건에 맞는 행이 없으면 UPDATE 자체가 0건 처리되고 RETURNING도 빈 결과가 된다.
--- 2) 실행 결과: 0 rows — 이 시점 데이터에는 '이영희'라는 고객명이 존재하지 않아 갱신된 행이 없었다.
--- 3) 실무 포인트: RETURNING 결과가 비어 있으면 "쿼리 오류"가 아니라 "조건에 맞는 행이 없었다"는 뜻이므로, 애플리케이션에서 이 둘을 구분해서 처리해야 한다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
----
-
-**실행 결과 — RETURNING — UPDATE (7.3.5-2)**
-
-**실행 완료**
-
-**실행 결과**: `s735_returning_update`
-
-```sql
-> UPDATE sales.orders SET total_price = total_price * 1.2 WHERE customer_name = '이영희' RETURNING * ...
-(0 rows)
-```
-
----
-
-**RETURNING — DELETE (7.3.5-3)**
-
-**예제 코드**: `s735_returning_delete`
-
-```
-DELETE FROM sales.orders
-WHERE total_price < 50
-RETURNING *;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-DELETE FROM sales.orders     -- orders 테이블에서 행을 삭제하는 DELETE 문
-WHERE total_price < 50       -- total_price가 50 미만인 행만 대상으로 함
-RETURNING *;                 -- 실제로 삭제된 행이 있다면 그 행의 모든 컬럼(삭제되기 직전 값)을 반환
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) DELETE ... RETURNING *은 "무엇이 삭제되었는지"를 삭제 직후 그대로 확인할 수 있게 해준다 — 별도 SELECT로 미리 조회해둘 필요가 없다.
--- 2) 실행 결과: 0 rows — 이 시점 데이터에는 total_price가 50 미만인 행이 없어 실제로 삭제된 행도 없었다.
--- 3) DELETE도 RETURNING도 조건에 맞는 행이 없으면 조용히 0건으로 끝난다는 점에서 UPDATE ... RETURNING과 동일한 패턴이다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
----
-
-**실행 결과 — RETURNING — DELETE (7.3.5-3)**
-
-**실행 완료**
-
-**실행 결과**: `s735_returning_delete`
-
-```sql
-> SELECT customer_name, total_price FROM sales.orders WHERE total_price < 50 ...
-(0 rows)
-> DELETE FROM sales.orders WHERE total_price < 50 RETURNING * ...
-(0 rows)
-```
-
----
-
-**기본 트랜잭션 BEGIN/COMMIT (7.3.6-1)**
+### **기본 트랜잭션 BEGIN/COMMIT**
 
 **예제 코드**: `s736_begin_commit`
 
@@ -1735,22 +1047,16 @@ COMMIT;                                                                     -- �
 
 *BEGIN 전/후 상태를 비교해 COMMIT으로 실제 반영됨을 확인*
 
----
+#### **실행 결과 — 기본 트랜잭션 BEGIN/COMMIT**
 
-**실행 결과 — 기본 트랜잭션 BEGIN/COMMIT (7.3.6-1)**
-
-**실행 완료**
-
-**실행 결과**: `s736_begin_commit`
 
 ```
 BEGIN 전 (일부): [(6, '최민수', Decimal('410.00')), (7, '윤서연', Decimal('275.30'))]
 UPDATE + DELETE 후 COMMIT → (일부): [(6, '최민수', Decimal('451.00')), (7, '윤서연', Decimal('275.30'))]
 ```
-
 ---
 
-**ROLLBACK (7.3.6-1)**
+### **ROLLBACK**
 
 **예제 코드**: `s736_rollback`
 
@@ -1780,23 +1086,16 @@ ROLLBACK;                         -- 트랜잭션을 취소 — BEGIN 이후의 
 
 *트랜잭션 내부에서 삭제 직후와 ROLLBACK 이후의 행 수를 비교해 실제로 복원됨을 확인*
 
----
-
-**실행 결과 — ROLLBACK (7.3.6-1)**
-
-**실행 완료**
-
-**실행 결과**: `s736_rollback`
+#### **실행 결과 — ROLLBACK**
 
 ```
 BEGIN 전 행 수: 2
 DELETE 직후(트랜잭션 내부) 행 수: 0
 ROLLBACK 후 행 수: 2 (복원됨)
 ```
-
 ---
 
-**SAVEPOINT를 활용한 부분 롤백 (7.3.6-2)**
+### **SAVEPOINT를 활용한 부분 롤백**
 
 **예제 코드**: `s736_savepoint`
 
@@ -1835,13 +1134,7 @@ COMMIT;                                                                     -- �
 
 *ROLLBACK TO sp1으로 DELETE만 취소되고 UPDATE는 유지되는 부분 롤백을 실제로 검증*
 
----
-
-**실행 결과 — SAVEPOINT를 활용한 부분 롤백 (7.3.6-2)**
-
-**실행 완료**
-
-**실행 결과**: `s736_savepoint`
+#### **실행 결과 — SAVEPOINT를 활용한 부분 롤백**
 
 ```
 SAVEPOINT sp1 설정 후 order_id=7 DELETE, SAVEPOINT sp2 설정
@@ -1849,9 +1142,7 @@ sp2 시점 행 수: 1
 ROLLBACK TO sp1 후 행 수: 2 (DELETE만 취소되고 UPDATE는 유지)
 COMMIT으로 최종 반영
 ```
-
 ---
-
 ## 7.4 데이터 제어 언어(DCL) — 개요
 
 - **GRANT / REVOKE**: 테이블·스키마·DB 등 리소스에 대한 접근 권한을 사용자/역할에 부여·철회
@@ -1864,7 +1155,7 @@ COMMIT으로 최종 반영
 
 ---
 
-**권한 부여 및 철회(GRANT/REVOKE) (7.4.1)**
+### **권한 부여 및 철회(GRANT/REVOKE)**
 
 **예제 코드**: `s741_grant_revoke`
 
@@ -1902,13 +1193,7 @@ REVOKE CONNECT ON DATABASE mydb FROM user1;                   -- 데이터베이
 
 *information_schema.role_table_grants로 부여/철회 전후 실제 권한 목록을 직접 조회*
 
----
-
-**실행 결과 — 권한 부여 및 철회(GRANT/REVOKE) (7.4.1)**
-
-**실행 완료**
-
-**실행 결과**: `s741_grant_revoke`
+#### **실행 결과 — 권한 부여 및 철회(GRANT/REVOKE)**
 
 ```sql
 > GRANT SELECT, INSERT ON sales.orders TO user1 ...  (rowcount=-1)
@@ -1931,10 +1216,9 @@ user1 | UPDATE
 > SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name='orders' AND grantee='user1' ...
 (0 rows)
 ```
-
 ---
 
-**비밀번호 암호화 (7.4.2-1)**
+### **비밀번호 암호화**
 
 **예제 코드**: `s742_password_encryption`
 
@@ -1962,13 +1246,7 @@ CREATE ROLE secure_user WITH LOGIN PASSWORD 'securepassword';  -- 로그인 가�
 
 *SHOW password_encryption으로 실제 이 서버의 암호화 방식을 확인*
 
----
-
-**실행 결과 — 비밀번호 암호화 (7.4.2-1)**
-
-**실행 완료**
-
-**실행 결과**: `s742_password_encryption`
+#### **실행 결과 — 비밀번호 암호화**
 
 ```sql
 > DROP ROLE IF EXISTS secure_user ...  (rowcount=-1)
@@ -1984,186 +1262,6 @@ password_encryption
 scram-sha-256
 (1행)
 ```
-
----
-
-**PGCrypto 필드 레벨 암호화 (7.4.2-3)**
-
-**예제 코드**: `s742_pgcrypto`
-
-```sql
-CREATE EXTENSION pgcrypto;
-INSERT INTO users (username, password)
-VALUES ('admin', crypt('mypassword', gen_salt('bf')));
-SELECT * FROM users WHERE password = crypt('mypassword', password);
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-CREATE EXTENSION pgcrypto;                                        -- 암호화 함수(crypt, gen_salt 등)를 제공하는 확장 모듈 설치
-INSERT INTO users (username, password)
-VALUES ('admin', crypt('mypassword', gen_salt('bf')));            -- gen_salt('bf')로 bcrypt용 솔트 생성 후 crypt()로 해시화하여 저장, 평문 저장 안 함
-SELECT * FROM users WHERE password = crypt('mypassword', password); -- 입력 비밀번호를 저장된 해시의 솔트로 재해시해 비교하는 방식으로 인증 수행
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) crypt(원문, gen_salt('bf'))는 매 호출마다 다른 솔트를 생성하므로 같은 비밀번호라도 저장되는 해시값은 매번 달라진다.
--- 2) 인증 시에는 crypt('입력값', password)처럼 저장된 해시(password 컬럼)를 솔트로 넘겨 같은 솔트로 재해시함으로써 값이 일치하는지만 비교한다 — 저장된 해시를 복호화하는 것이 아니다.
--- 3) 실제 테스트에서 admin의 password 컬럼에 $2a$06$... 형태의 bcrypt 해시가 저장되고, 올바른 비밀번호로 조회하면 1행, 틀린 비밀번호로 조회하면 0 rows가 반환되어 인증 성공/실패를 직접 눈으로 확인할 수 있다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*책은 users 테이블 스키마를 별도로 제시하지 않아 동일 컬럼(username, password)으로 harness에서 구성 — crypt()/gen_salt()로 실제 bcrypt 암호화 및 인증 성공/실패 케이스까지 검증*
-
----
-
-**실행 결과 — PGCrypto 필드 레벨 암호화 (7.4.2-3)**
-
-**실행 완료**
-
-**실행 결과**: `s742_pgcrypto`
-
-```sql
-> CREATE EXTENSION IF NOT EXISTS pgcrypto ...  (rowcount=-1)
-> DROP TABLE IF EXISTS users ...  (rowcount=-1)
-> CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT UNIQUE, password TEXT) ...  (rowcount=-1)
-> INSERT INTO users (username, password) VALUES ('admin', crypt('mypassword', gen_salt('bf'))) ...  (rowcount=1)
-> SELECT username, password FROM users WHERE username='admin' ...
-username | password
--------------------
-admin | $2a$06$vurx0eZM.Ely23CNUuzQAOjwdxS75Ft2IB04yFEG470/cPOomKYkq
-(1행)
-> SELECT username FROM users WHERE password = crypt('mypassword', password) ...
-username
---------
-admin
-(1행)
-> SELECT username FROM users WHERE password = crypt('wrongpassword', password) ...
-(0 rows)
-```
-
----
-
-**역할 및 그룹 관리 (7.4.3)**
-
-**예제 코드**: `s743_role_group`
-
-```sql
-CREATE ROLE manager_role;
-GRANT SELECT, INSERT, UPDATE ON sales.orders TO manager_role;
-GRANT manager_role TO user1;
--- SET ROLE manager_role;
-REVOKE manager_role FROM user1;
-DROP ROLE manager_role;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-CREATE ROLE manager_role;                                    -- 로그인 불가능한 그룹 역할 생성(권한 묶음 용도)
-GRANT SELECT, INSERT, UPDATE ON sales.orders TO manager_role; -- manager_role에 테이블 권한 3종 부여 → 이 GRANT가 뒤에서 DROP ROLE 실패의 원인이 된다
-GRANT manager_role TO user1;                                  -- user1이 manager_role을 상속받도록 역할 위임(멤버십) 부여
--- SET ROLE manager_role;                                     -- (주석 처리됨) 실제 실행 시 user1 세션에서 manager_role 권한으로 전환하는 명령, 본 예제에서는 미실행
-REVOKE manager_role FROM user1;                                -- user1의 role 멤버십(위임)만 철회 — sales.orders에 대한 manager_role 자체의 테이블 권한은 그대로 남음
-DROP ROLE manager_role;                                        -- manager_role을 삭제하려 하지만 위에서 부여된 테이블 권한이 아직 남아 있어 실패
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) [실제 오류] 이 블록을 그대로 실행하면 DROP ROLE에서 DependentObjectsStillExist 예외가 발생한다: role "manager_role" cannot be dropped because some objects depend on it — DETAIL: privileges for table sales.orders.
--- 2) 원인: REVOKE manager_role FROM user1;은 "역할 위임(멤버십)"만 철회할 뿐, GRANT SELECT, INSERT, UPDATE ON sales.orders TO manager_role;로 manager_role 자체에 부여된 테이블 권한은 별개로 남아 있다 — 두 REVOKE 대상은 서로 다른 것이다.
--- 3) 해결: DROP ROLE manager_role; 실행 전에 REVOKE SELECT, INSERT, UPDATE ON sales.orders FROM manager_role;를 먼저 실행해 role이 보유한 테이블 권한 자체를 철회해야 한다. 책 코드는 이 REVOKE 문을 누락했다.
--- 4) 교훈: 역할을 삭제하려면 그 역할이 "받은" 멤버십뿐 아니라 그 역할에 "부여된" 모든 객체 권한까지 함께 철회해야 한다 — DROP OWNED BY manager_role; 로 한 번에 정리하는 방법도 있다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*책 코드 그대로 실행하면 실제 오류 발생 — manager_role이 sales.orders에 대한 테이블 권한을 여전히 보유한 상태라 DROP ROLE 전에 REVOKE가 필요한데, 책은 역할 위임만 REVOKE하고 테이블 권한 REVOKE를 누락함*
-
----
-
-**실행 결과 — DROP ROLE 실패 (책이 누락한 REVOKE, 실제 오류)**
-
-**예외 발생**
-
-**실행 결과**: `s743_role_group`
-
-```
-DependentObjectsStillExist: role "manager_role" cannot be dropped because some objects depend on it
-DETAIL:  privileges for table sales.orders
-```
-
----
-
-**Row-Level Security 적용 (7.4.4)**
-
-**예제 코드**: `s744_rls`
-
-```sql
-ALTER TABLE sales.orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY order_policy
-ON sales.orders
-FOR SELECT
-USING (customer_name = current_user);
-ALTER TABLE sales.orders FORCE ROW LEVEL SECURITY;
--- 정책 해제
-DROP POLICY order_policy ON sales.orders;
-ALTER TABLE sales.orders DISABLE ROW LEVEL SECURITY;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-ALTER TABLE sales.orders ENABLE ROW LEVEL SECURITY;   -- sales.orders 테이블에 행 단위 보안(RLS) 기능을 활성화
-CREATE POLICY order_policy
-ON sales.orders
-FOR SELECT                                            -- SELECT 작업에만 적용되는 정책 정의
-USING (customer_name = current_user);                 -- 조회 조건: 행의 customer_name이 현재 접속 계정명(current_user)과 같은 행만 통과
-ALTER TABLE sales.orders FORCE ROW LEVEL SECURITY;     -- 테이블 소유자에게도 RLS를 강제 적용(단, superuser에는 적용 안 됨)
--- 정책 해제
-DROP POLICY order_policy ON sales.orders;              -- 정의된 정책 삭제
-ALTER TABLE sales.orders DISABLE ROW LEVEL SECURITY;   -- 테이블의 RLS 기능 자체를 비활성화
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) USING (customer_name = current_user)는 접속 계정의 이름과 데이터의 값을 직접 비교하는 패턴으로, 계정명과 데이터 값이 일치해야만 동작하는 실무형 RLS 예시다.
--- 2) 실제 '박서준' 계정으로 접속해 SELECT하면 [('박서준', 99.99)]처럼 자신의 행만 반환되어 정책이 실제로 필터링을 수행함을 확인할 수 있다.
--- 3) FORCE ROW LEVEL SECURITY를 걸어도 postgres(관리자/소유자) 계정으로 조회하면 3행 전체가 그대로 반환된다 — 테이블 소유자는 기본적으로 RLS를 우회하기 때문이며, 이는 FORCE 옵션의 흔한 오해 포인트다.
--- 4) RLS는 GRANT/REVOKE로 정해지는 테이블 단위 권한과 달리 "행" 단위로 접근을 제어하는 별도 계층이며, 두 메커니즘은 함께 적용된다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*customer_name='박서준'인 행이 있는 실제 계정으로 접속해 RLS 정책이 자신의 행만 반환하는지 실제 검증(관리자 계정 조회와 비교)*
-
----
-
-**실행 결과 — Row-Level Security 적용 (7.4.4)**
-
-**실행 완료**
-
-**실행 결과**: `s744_rls`
-
-```sql
-> GRANT SELECT ON sales.orders TO "박서준" ...  (rowcount=-1)
-> GRANT USAGE ON SCHEMA sales TO "박서준" ...  (rowcount=-1)
-> ALTER TABLE sales.orders ENABLE ROW LEVEL SECURITY ...  (rowcount=-1)
-> DROP POLICY IF EXISTS order_policy ON sales.orders ...  (rowcount=-1)
-> CREATE POLICY order_policy ON sales.orders FOR SELECT USING (customer_name = current_user) ...  (rowcount=-1)
-> ALTER TABLE sales.orders FORCE ROW LEVEL SECURITY ...  (rowcount=-1)
-정책 적용 후 '박서준' 계정으로 SELECT → [('박서준', Decimal('99.99'))] (자신의 행만 조회됨)
-postgres(관리자) 계정으로 SELECT(RLS 미적용 대상) → 총 3행 전체 조회됨
-> DROP POLICY order_policy ON sales.orders ...  (rowcount=-1)
-> ALTER TABLE sales.orders DISABLE ROW LEVEL SECURITY ...  (rowcount=-1)
-```
-
 ---
 
 ## 7.5 고급 SQL — 개요
@@ -2180,7 +1278,7 @@ postgres(관리자) 계정으로 SELECT(RLS 미적용 대상) → 총 3행 전�
 
 ---
 
-**실습용 더미 스키마 구성**
+### **실습용 더미 스키마 구성**
 
 **예제 코드**: `s75_setup`
 
@@ -2228,7 +1326,7 @@ CREATE TABLE employees (employee_id SERIAL PRIMARY KEY, name TEXT,          -- �
 
 ---
 
-**EXISTS 서브쿼리 (7.5.1-1)**
+### **EXISTS 서브쿼리**
 
 **예제 코드**: `s751_exists`
 
@@ -2261,13 +1359,7 @@ WHERE EXISTS (                                                              -- E
 
 </details>
 
----
-
-**실행 결과 — EXISTS 서브쿼리 (7.5.1-1)**
-
-**실행 완료**
-
-**실행 결과**: `s751_exists`
+#### **실행 결과 — EXISTS 서브쿼리**
 
 ```sql
 > SELECT customer_id, customer_name FROM customers c ...
@@ -2278,10 +1370,9 @@ customer_id | customer_name
 4 | 최지우
 (3행)
 ```
-
 ---
 
-**IN 서브쿼리 (7.5.1-2)**
+### **IN 서브쿼리**
 
 **예제 코드**: `s751_in`
 
@@ -2312,13 +1403,8 @@ WHERE customer_id IN (                                                      -- I
 
 </details>
 
----
+#### **실행 결과 — IN 서브쿼리**
 
-**실행 결과 — IN 서브쿼리 (7.5.1-2)**
-
-**실행 완료**
-
-**실행 결과**: `s751_in`
 
 ```sql
 > SELECT customer_id, customer_name FROM customers ...
@@ -2329,10 +1415,9 @@ customer_id | customer_name
 4 | 최지우
 (3행)
 ```
-
 ---
 
-**ANY 서브쿼리 (7.5.1-3)**
+### **ANY 서브쿼리**
 
 **예제 코드**: `s751_any`
 
@@ -2365,11 +1450,7 @@ WHERE price > ANY (                                                        -- AN
 
 ---
 
-**실행 결과 — ANY 서브쿼리 (7.5.1-3)**
-
-**실행 완료**
-
-**실행 결과**: `s751_any`
+#### **실행 결과 — ANY 서브쿼리**
 
 ```sql
 > SELECT product_id, product_name, price FROM products ...
@@ -2383,7 +1464,7 @@ product_id | product_name | price
 
 ---
 
-**ALL 서브쿼리 (7.5.1-4)**
+### **ALL 서브쿼리**
 
 **예제 코드**: `s751_all`
 
@@ -2416,11 +1497,7 @@ WHERE price > ALL (                                                        -- AL
 
 ---
 
-**실행 결과 — ALL 서브쿼리 (7.5.1-4)**
-
-**실행 완료**
-
-**실행 결과**: `s751_all`
+#### **실행 결과 — ALL 서브쿼리**
 
 ```sql
 > SELECT product_id, product_name, price FROM products ...
@@ -2432,9 +1509,9 @@ product_id | product_name | price
 
 ---
 
-**이중쿼리 — 고객별 최고 주문 (7.5.2-1)**
+### **이중쿼리 — 고객별 최고 주문**
 
-**예제 코드**: `s752_nested1`
+#### **예제 코드**: `s752_nested1`
 
 ```sql
 SELECT customer_id, customer_name,
@@ -2464,11 +1541,7 @@ FROM customers;                                                  -- 바깥쿼리
 
 ---
 
-**실행 결과 — 이중쿼리 — 고객별 최고 주문 (7.5.2-1)**
-
-**실행 완료**
-
-**실행 결과**: `s752_nested1`
+**실행 결과 — 이중쿼리 — 고객별 최고 주문**
 
 ```sql
 > SELECT customer_id, customer_name, ...
@@ -2484,9 +1557,9 @@ customer_id | customer_name | max_order
 
 ---
 
-**이중쿼리 — 평균 초과 주문 (7.5.2-2)**
+### **이중쿼리 — 평균 초과 주문**
 
-**예제 코드**: `s752_nested2`
+#### **예제 코드**: `s752_nested2`
 
 ```sql
 SELECT order_id, customer_id, total_amount
@@ -2514,11 +1587,7 @@ WHERE total_amount > (SELECT AVG(total_amount) FROM orders);    -- 서브쿼리:
 
 ---
 
-**실행 결과 — 이중쿼리 — 평균 초과 주문 (7.5.2-2)**
-
-**실행 완료**
-
-**실행 결과**: `s752_nested2`
+#### **실행 결과 — 이중쿼리 — 평균 초과 주문**
 
 ```sql
 > SELECT order_id, customer_id, total_amount FROM orders WHERE total_amount > (SELECT AVG(total_amount) FROM orders) ...
@@ -2532,7 +1601,7 @@ order_id | customer_id | total_amount
 
 ---
 
-**INNER JOIN (7.5.3-1)**
+### **INNER JOIN**
 
 **예제 코드**: `s753_inner`
 
@@ -2561,11 +1630,7 @@ INNER JOIN orders o ON c.customer_id = o.customer_id;              -- 두 테이
 
 ---
 
-**실행 결과 — INNER JOIN (7.5.3-1)**
-
-**실행 완료**
-
-**실행 결과**: `s753_inner`
+#### **실행 결과 — INNER JOIN**
 
 ```sql
 > SELECT c.customer_id, c.customer_name, o.order_id, o.total_amount ...
@@ -2582,7 +1647,7 @@ customer_id | customer_name | order_id | total_amount
 
 ---
 
-**LEFT JOIN (7.5.3-2)**
+### **LEFT JOIN**
 
 **예제 코드**: `s753_left`
 
@@ -2613,11 +1678,7 @@ LEFT JOIN orders o ON c.customer_id = o.customer_id;               -- 왼쪽(cus
 
 ---
 
-**실행 결과 — LEFT JOIN (7.5.3-2)**
-
-**실행 완료**
-
-**실행 결과**: `s753_left`
+#### **실행 결과 — LEFT JOIN**
 
 ```sql
 > SELECT c.customer_id, c.customer_name, o.order_id, o.total_amount ...
@@ -2635,7 +1696,7 @@ customer_id | customer_name | order_id | total_amount
 
 ---
 
-**RIGHT JOIN (7.5.3-3)**
+### **RIGHT JOIN**
 
 **예제 코드**: `s753_right`
 
@@ -2664,11 +1725,7 @@ RIGHT JOIN orders o ON c.customer_id = o.customer_id;              -- 오른쪽(
 
 ---
 
-**실행 결과 — RIGHT JOIN (7.5.3-3)**
-
-**실행 완료**
-
-**실행 결과**: `s753_right`
+#### **실행 결과 — RIGHT JOIN**
 
 ```sql
 > SELECT c.customer_id, c.customer_name, o.order_id, o.total_amount ...
@@ -2685,7 +1742,7 @@ customer_id | customer_name | order_id | total_amount
 
 ---
 
-**FULL OUTER JOIN (7.5.3-4)**
+### **FULL OUTER JOIN**
 
 **예제 코드**: `s753_full`
 
@@ -2714,11 +1771,7 @@ FULL OUTER JOIN orders o ON c.customer_id = o.customer_id;         -- 왼쪽(cus
 
 ---
 
-**실행 결과 — FULL OUTER JOIN (7.5.3-4)**
-
-**실행 완료**
-
-**실행 결과**: `s753_full`
+#### **실행 결과 — FULL OUTER JOIN**
 
 ```sql
 > SELECT c.customer_id, c.customer_name, o.order_id, o.total_amount ...
@@ -2736,7 +1789,7 @@ customer_id | customer_name | order_id | total_amount
 
 ---
 
-**CROSS JOIN (7.5.3-5)**
+### **CROSS JOIN (7.5.3-5)**
 
 **예제 코드**: `s753_cross`
 
@@ -2768,11 +1821,7 @@ CROSS JOIN products p;                  -- ON 조건 없이 customers와 product
 
 ---
 
-**실행 결과 — CROSS JOIN (7.5.3-5)**
-
-**실행 완료**
-
-**실행 결과**: `s753_cross`
+#### **실행 결과 — CROSS JOIN**
 
 ```sql
 > SELECT COUNT(*) AS combo_count FROM customers c CROSS JOIN products p ...
@@ -2793,35 +1842,11 @@ customer_name | product_name
 
 ---
 
-**일반 CTE (7.5.4-1)**
-
-**예제 코드**: `s754_cte`
-
-```sql
-WITH high_orders AS (
-    SELECT customer_id, total_amount FROM orders WHERE total_amount > 1000
-)
-SELECT c.customer_id, c.customer_name, h.total_amount
-FROM customers c
-JOIN high_orders h ON c.customer_id = h.customer_id;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-WITH high_orders AS (                                              -- CTE 정의 시작: high_orders라는 이름의 임시 결과 집합 선언
-    SELECT customer_id, total_amount FROM orders WHERE total_amount > 1000  -- 1000 초과 주문만 필터링해 임시 집합 구성
-)
-SELECT c.customer_id, c.customer_name, h.total_amount              -- 최종 SELECT: 고객 정보 + high_orders의 금액을 함께 조회
-FROM customers c
-JOIN high_orders h ON c.customer_id = h.customer_id;               -- customers와 CTE 결과를 customer_id 기준으로 JOIN
 
 -- ---------------------------------------------------------------
 -- [교안용 설명 포인트]
 -- 1) WITH high_orders AS (...) 는 서브쿼리를 미리 이름 붙여 정의해두는 것으로, 쿼리 본문에서는 마치 테이블처럼 재사용할 수 있다.
 -- 2) 서브쿼리를 FROM 절에 직접 중첩하는 방식과 달리, CTE는 쿼리 상단에서 한 번 정의되므로 가독성이 높고 복잡한 쿼리를 단계별로 읽기 쉽다.
--- 3) CTE는 해당 쿼리 실행 동안에만 존재하는 임시 결과이며, 실제 테이블처럼 디스크에 저장되지 않는다.
 -- ---------------------------------------------------------------
 ```
 
@@ -2829,89 +1854,7 @@ JOIN high_orders h ON c.customer_id = h.customer_id;               -- customers�
 
 ---
 
-**실행 결과 — 일반 CTE (7.5.4-1)**
-
-**실행 완료**
-
-**실행 결과**: `s754_cte`
-
-```sql
-> WITH high_orders AS (SELECT customer_id, total_amount FROM orders WHERE total_amount>1000) ...
-customer_id | customer_name | total_amount
-------------------------------------------
-1 | 김민준 | 1200.00
-2 | 이서연 | 1500.50
-4 | 최지우 | 2100.00
-(3행)
-```
-
----
-
-**재귀 CTE — 직원 계층 구조 (7.5.4-2)**
-
-**예제 코드**: `s754_recursive_cte`
-
-```sql
-WITH RECURSIVE employee_hierarchy AS (
-    SELECT employee_id, name, manager_id FROM employees WHERE manager_id IS NULL
-    UNION ALL
-    SELECT e.employee_id, e.name, e.manager_id
-    FROM employees e
-    JOIN employee_hierarchy eh ON e.manager_id = eh.employee_id
-)
-SELECT * FROM employee_hierarchy;
-```
-
-<details>
-<summary><span class="label-badge">코드분석</span></summary>
-
-```sql
-WITH RECURSIVE employee_hierarchy AS (                             -- RECURSIVE 키워드로 재귀 CTE 선언 시작
-    SELECT employee_id, name, manager_id FROM employees WHERE manager_id IS NULL  -- [anchor 부분] 재귀의 시작점: manager_id가 없는 최상위(사장) 행 선택
-    UNION ALL                                                       -- anchor 결과와 recursive 결과를 누적 결합(중복 제거 없이)
-    SELECT e.employee_id, e.name, e.manager_id                     -- [recursive 부분] 이전 단계 결과(eh)를 참조해 그 아래 직급을 계속 찾아나감
-    FROM employees e
-    JOIN employee_hierarchy eh ON e.manager_id = eh.employee_id     -- 자기 자신(employee_hierarchy)을 참조하는 재귀 JOIN: 상위 결과의 employee_id가 다음 단계의 manager_id와 일치하면 연결
-)
-SELECT * FROM employee_hierarchy;                                   -- anchor + recursive가 더 이상 새 행을 만들지 못할 때까지 반복된 최종 누적 결과 조회
-
--- ---------------------------------------------------------------
--- [교안용 설명 포인트]
--- 1) 재귀 CTE는 반드시 "anchor(초기값) 부분 UNION ALL recursive(재귀) 부분" 구조를 가진다 — anchor는 종료 조건이 있는 시작점(여기서는 manager_id IS NULL), recursive는 CTE 자기 자신을 참조하며 다음 단계로 확장한다.
--- 2) recursive 부분이 더 이상 새로운 행을 만들어내지 못하는 시점(더 이상 자식 직원이 없을 때)에 재귀가 자동으로 종료된다.
--- 3) 조직도, 카테고리 트리처럼 부모-자식 관계로 이어지는 계층 구조 데이터를 한 번의 쿼리로 전부 펼쳐볼 때 유용하다.
--- 4) UNION ALL을 사용해 중복 제거 연산 없이 결과를 그대로 누적하므로 UNION보다 성능이 유리하다.
--- ---------------------------------------------------------------
-```
-
-</details>
-
-*사장(최상위)부터 대리까지 3단계 조직 계층이 실제로 재귀 조회되는지 확인*
-
----
-
-**실행 결과 — 재귀 CTE — 직원 계층 구조 (7.5.4-2)**
-
-**실행 완료**
-
-**실행 결과**: `s754_recursive_cte`
-
-```
-> WITH RECURSIVE employee_hierarchy AS ( ...
-employee_id | name | manager_id | depth
----------------------------------------
-1 | 김사장 | None | 0
-2 | 이부장 | 1 | 1
-3 | 박부장 | 1 | 1
-4 | 최과장 | 2 | 2
-5 | 정과장 | 2 | 2
-6 | 한대리 | 4 | 3
-(6행)
-```
-
----
-
-**RANK() — 순위 매기기 (7.5.5-1)**
+### **RANK() — 순위 매기기**
 
 **예제 코드**: `s755_rank`
 
@@ -2941,11 +1884,7 @@ FROM orders;
 
 ---
 
-**실행 결과 — RANK() — 순위 매기기 (7.5.5-1)**
-
-**실행 완료**
-
-**실행 결과**: `s755_rank`
+####**실행 결과 — RANK() — 순위 매기기**
 
 ```sql
 > SELECT customer_id, order_id, total_amount, ...
@@ -2962,7 +1901,7 @@ customer_id | order_id | total_amount | rank
 
 ---
 
-**DENSE_RANK() (7.5.5-2)**
+### **DENSE_RANK()**
 
 **예제 코드**: `s755_dense_rank`
 
@@ -2992,11 +1931,7 @@ FROM orders;
 
 ---
 
-**실행 결과 — DENSE_RANK() (7.5.5-2)**
-
-**실행 완료**
-
-**실행 결과**: `s755_dense_rank`
+#### **실행 결과 — DENSE_RANK()**
 
 ```sql
 > SELECT customer_id, order_id, total_amount, ...
@@ -3013,7 +1948,7 @@ customer_id | order_id | total_amount | dense_rank
 
 ---
 
-**LEAD() — 다음 행 값 참조 (7.5.5-3)**
+### **LEAD() — 다음 행 값 참조**
 
 **예제 코드**: `s755_lead`
 
@@ -3044,11 +1979,8 @@ FROM orders;
 
 ---
 
-**실행 결과 — LEAD() — 다음 행 값 참조 (7.5.5-3)**
+#### **실행 결과 — LEAD() — 다음 행 값 참조**
 
-**실행 완료**
-
-**실행 결과**: `s755_lead`
 
 ```sql
 > SELECT customer_id, order_id, total_amount, ...
@@ -3065,7 +1997,7 @@ customer_id | order_id | total_amount | next_order_amount
 
 ---
 
-**LAG() — 이전 행 값 참조 (7.5.5-4)**
+### **LAG() — 이전 행 값 참조**
 
 **예제 코드**: `s755_lag`
 
@@ -3095,11 +2027,7 @@ FROM orders;
 
 ---
 
-**실행 결과 — LAG() — 이전 행 값 참조 (7.5.5-4)**
-
-**실행 완료**
-
-**실행 결과**: `s755_lag`
+#### **실행 결과 — LAG() — 이전 행 값 참조**
 
 ```sql
 > SELECT customer_id, order_id, total_amount, ...
@@ -3126,7 +2054,7 @@ customer_id | order_id | total_amount | prev_order_amount
 
 ---
 
-**UNION / UNION ALL (7.6.1-1)**
+### **UNION / UNION ALL**
 
 **예제 코드**: `s761_union`
 
@@ -3165,11 +2093,7 @@ SELECT customer_id FROM orders;             -- 동일한 두 번째 SELECT
 
 ---
 
-**실행 결과 — UNION / UNION ALL (7.6.1-1)**
-
-**실행 완료**
-
-**실행 결과**: `s761_union`
+#### **실행 결과 — UNION / UNION ALL**
 
 ```sql
 > SELECT customer_id FROM customers UNION SELECT customer_id FROM orders ORDER BY customer_id ...
@@ -3197,7 +2121,7 @@ customer_id
 
 ---
 
-**INTERSECT — 교집합 (7.6.1-2)**
+### **INTERSECT — 교집합**
 
 **예제 코드**: `s761_intersect`
 
@@ -3228,11 +2152,7 @@ SELECT customer_id FROM orders;             -- orders 테이블의 customer_id �
 
 ---
 
-**실행 결과 — INTERSECT — 교집합 (7.6.1-2)**
-
-**실행 완료**
-
-**실행 결과**: `s761_intersect`
+#### **실행 결과 — INTERSECT — 교집합**
 
 ```sql
 > SELECT customer_id FROM customers INTERSECT SELECT customer_id FROM orders ORDER BY customer_id ...
@@ -3247,7 +2167,7 @@ customer_id
 
 ---
 
-**EXCEPT — 차집합 (7.6.1-3)**
+### **EXCEPT — 차집합**
 
 **예제 코드**: `s761_except`
 
@@ -3279,11 +2199,7 @@ SELECT customer_id FROM orders;             -- orders 테이블의 customer_id �
 
 ---
 
-**실행 결과 — EXCEPT — 차집합 (7.6.1-3)**
-
-**실행 완료**
-
-**실행 결과**: `s761_except`
+#### **실행 결과 — EXCEPT — 차집합**
 
 ```sql
 > SELECT customer_id FROM customers EXCEPT SELECT customer_id FROM orders ORDER BY customer_id ...
@@ -3295,7 +2211,7 @@ customer_id
 
 ---
 
-**GROUP BY (7.6.2-1)**
+### **GROUP BY (7.6.2-1)**
 
 **예제 코드**: `s762_groupby`
 
@@ -3325,11 +2241,7 @@ GROUP BY customer_id;                                   -- customer_id 값이 �
 
 ---
 
-**실행 결과 — GROUP BY (7.6.2-1)**
-
-**실행 완료**
-
-**실행 결과**: `s762_groupby`
+#### **실행 결과 — GROUP BY**
 
 ```sql
 > SELECT customer_id, SUM(total_amount) AS total_spent FROM orders GROUP BY customer_id ORDER BY customer_id ...
@@ -3344,7 +2256,7 @@ customer_id | total_spent
 
 ---
 
-**집계 함수 5종 (7.6.2-2)**
+### **집계 함수 5종**
 
 **예제 코드**: `s762_agg`
 
@@ -3380,11 +2292,7 @@ FROM orders;                                       -- 집계 대상 테이블 (G
 
 ---
 
-**실행 결과 — 집계 함수 5종 (7.6.2-2)**
-
-**실행 완료**
-
-**실행 결과**: `s762_agg`
+#### **실행 결과 — 집계 함수 5종**
 
 ```sql
 > SELECT COUNT(*) AS total_orders, SUM(total_amount) AS total_sales, ...
@@ -3396,7 +2304,7 @@ total_orders | total_sales | avg_order_amount | max_order_amount | min_order_amo
 
 ---
 
-**HAVING (7.6.2-3)**
+### **HAVING**
 
 **예제 코드**: `s762_having`
 
@@ -3431,11 +2339,7 @@ HAVING SUM(total_amount) > 1000;                        -- 그룹화된 집계 �
 
 ---
 
-**실행 결과 — HAVING (7.6.2-3)**
-
-**실행 완료**
-
-**실행 결과**: `s762_having`
+#### **실행 결과 — HAVING**
 
 ```sql
 > SELECT customer_id, SUM(total_amount) AS total_spent FROM orders ...
@@ -3449,7 +2353,7 @@ customer_id | total_spent
 
 ---
 
-**ROLLUP — 계층적 그룹화 (7.6.3-1)**
+### **ROLLUP — 계층적 그룹화**
 
 **예제 코드**: `s763_rollup`
 
@@ -3487,11 +2391,7 @@ GROUP BY ROLLUP(EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date));
 
 ---
 
-**실행 결과 — ROLLUP — 계층적 그룹화 (7.6.3-1)**
-
-**실행 완료**
-
-**실행 결과**: `s763_rollup`
+#### **실행 결과 — ROLLUP — 계층적 그룹화**
 
 ```sql
 > SELECT EXTRACT(YEAR FROM order_date) AS order_year, ...
@@ -3508,7 +2408,7 @@ None | None | 6130.50
 
 ---
 
-**CUBE — 다차원 집계 (7.6.3-2)**
+### **CUBE — 다차원 집계**
 
 **예제 코드**: `s763_cube`
 
@@ -3545,11 +2445,7 @@ GROUP BY CUBE(region, product_category);                              -- CUBE: �
 
 ---
 
-**실행 결과 — CUBE — 다차원 집계 (7.6.3-2)**
-
-**실행 완료**
-
-**실행 결과**: `s763_cube`
+#### **실행 결과 — CUBE — 다차원 집계**
 
 ```sql
 > DROP TABLE IF EXISTS sales_analytics ...  (rowcount=-1)
@@ -3571,7 +2467,8 @@ None | Electronics | 10000.00
 
 ---
 
-## 7.7 PostgreSQL과 머신러닝 프로젝트 적용 — 개요
+## 7.7 PostgreSQL과 머신러닝 프로젝트 적용 — 개요 
+# =>(읽고 참고만 할것)
 
 - **데이터 전처리**: 결측값 삭제/평균 대체 · CASE WHEN으로 구간별 피처 엔지니어링 · corr()로 상관관계 분석
 
@@ -3583,7 +2480,7 @@ None | Electronics | 10000.00
 
 ---
 
-**결측값 처리 — 삭제 (7.7.1-1)**
+### **결측값 처리 — 삭제**
 
 **예제 코드**: `s771_missing_delete`
 
@@ -4142,6 +3039,8 @@ id | model | prediction
 ---
 
 ## 7.8 PostgreSQL과 Python 연동 — 실전 프로젝트 6종 개요
+# =>(읽고 참고만 할것)
+
 
 - **7.8.1 추천 시스템**: users · products · purchases · recommendations 4테이블
 
